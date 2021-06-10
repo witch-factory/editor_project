@@ -1,1 +1,4 @@
-single_line_comment_start
+[main]
+[a]
+[b]
+3

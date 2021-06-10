@@ -9,5 +9,7 @@ int main()
         getch();                        /* Wait for user input */            
         endwin();                       /* End curses mode                */ 
 
+        int a=0;
+        int b;
         return 0;                                                            
 }

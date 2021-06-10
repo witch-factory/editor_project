@@ -26,6 +26,8 @@
 #define TAB_STOP 4
 #define QUIT_TIMES 2
 
+#define WORDMAX 30 // max length of word -> subwindow width is WORDMAX+2
+#define SHOWCNT 5 // max number of words shown -> subwindow height is SHOWCNT+2
 
 enum editor_highlight{
 	HL_NORMAL=0,
@@ -57,9 +59,8 @@ typedef struct word_node{
 word_node* list=NULL;
 
 int wordcnt=0;
+char word[WORDMAX];
 
-#define WORDMAX 30 // max length of word -> subwindow width is WORDMAX+2
-#define SHOWCNT 5 // max number of words shown -> subwindow height is SHOWCNT+2
 
 
 /*** color define ***/
@@ -243,6 +244,11 @@ int is_separator(int c){
 	return 0;
 }
 
+
+/* 함수명/변수명 임시로 복사하는 버퍼 변수 */
+
+
+
 /* 행의 하이라이팅 버퍼 업데이트 */
 void editor_update_syntax(editor_row* row){
 	int i, j, idx, prev_sep;
@@ -264,6 +270,9 @@ void editor_update_syntax(editor_row* row){
 	int changed;
 
 	int name_keyword=0;
+
+    FILE* debug_file;
+    debug_file=fopen("save.txt", "a");
 
 	row->hl = realloc(row->hl, row->rsize);
 	memset(row->hl, HL_NORMAL, row->rsize);
@@ -388,8 +397,13 @@ void editor_update_syntax(editor_row* row){
 				{
 					int a;
 					// 함수명/변수명 길이 찾기
-					for (a = 0; i + a < row->rsize && is_separator(row->render[i + a]) == 0; a++);
-					insert_list(&row->render[i], a); // 함수명/변수명 리스트에 삽입
+					for (a = 0; i + a < row->rsize && !is_separator(row->render[i + a]); a++);
+					//modf: < ! >is_separator...
+					strncpy(word, &row->render[i], a);
+					word[a] = '\0';
+					wordcnt++;
+					fprintf(debug_file, "[%s]\n", word);
+					//insert_list(&row->render[i], a); // 함수명/변수명 리스트에 삽입
 					name_keyword = 0; prev_sep = 0;
 					i += a;
 					continue;
@@ -431,7 +445,7 @@ void editor_update_syntax(editor_row* row){
 	if(changed&&row->idx+1<Editor.numrows){
 		editor_update_syntax(&Editor.row[row->idx+1]);
 	}
-	
+	fclose(debug_file);
 }
 
 /* 버려진 함수 */
