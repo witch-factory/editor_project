@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-xv,mdfs 123 'fdk'
-
-=======
 #include <ncurses.h>    
 #include <locale.h>                                                     
                                                                              
@@ -17,4 +13,3 @@ int main()
         int b;
         return 0;                                                            
 }
->>>>>>> 383c9ae79814e103a977bcfcb64fe6ed973a61ed

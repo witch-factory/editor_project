@@ -489,7 +489,7 @@ int print_auto_suggestion(trie* root, char* query) {
 
 	/* 이 노드가 끝이고, 그 뒤에 이어지는 노드가 없을 때 인쇄 */
 	if (is_word && is_last) {
-		printf("%s", query);
+		printf("%s\n", query);
 		return -1;
 	}
 
