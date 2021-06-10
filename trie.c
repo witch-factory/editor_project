@@ -15,10 +15,10 @@ typedef struct trie {
 
 
 trie* get_new_trie_node();
-void insert_string(trie* head, char* str);
+void trie_insert_string(trie* head, char* str);
 int search(trie* head, char* str);
 int has_children(trie* cur);
-int deletion(trie** cur, char* str);
+int trie_deletion(trie** cur, char* str);
 void free_trie(trie* node);
 
 /* C++ string function imitation*/
@@ -40,16 +40,16 @@ int main(void) {
 	int comp, t = -1;
 	trie* root = get_new_trie_node();
 
-	insert_string(root, "hello");
-	insert_string(root, "dog");
-	insert_string(root, "hell");
-	insert_string(root, "cat");
-	insert_string(root, "a");
-	insert_string(root, "hel");
-	insert_string(root, "help");
-	insert_string(root, "helps");
-	insert_string(root, "helping");
-	t=deletion(&root, "help");
+	trie_insert_string(root, "hello");
+	trie_insert_string(root, "dog");
+	trie_insert_string(root, "hell");
+	trie_insert_string(root, "cat");
+	trie_insert_string(root, "a");
+	trie_insert_string(root, "hel");
+	trie_insert_string(root, "help");
+	trie_insert_string(root, "helps");
+	trie_insert_string(root, "helping");
+	t=trie_deletion(&root, "help");
 	/* delete 시에는 root의 주소를 전달해야 하는 것을 주의 */
 
 	//printf("%d\n", t);
@@ -81,7 +81,7 @@ trie* get_new_trie_node() {
 
 
 
-void insert_string(trie* head, char* str) {
+void trie_insert_string(trie* head, char* str) {
 	/* insert string to the head trie */
 	trie* cur;
 
@@ -106,7 +106,7 @@ void insert_string(trie* head, char* str) {
 
 
 
-int search(trie* head, char* str) {
+int trie_search(trie* head, char* str) {
 	/* if string is found in the trie, return 1 otherwise 0 */
 	trie* cur;
 
@@ -140,6 +140,7 @@ int has_children(trie* cur) {
 }
 
 char* string_append(char* str, char part) {
+    //append part character to string
 	int i, len;
 	char* temp;
 
@@ -248,12 +249,12 @@ int print_auto_suggestion(trie* root, char* query) {
 		suggestion(crawl, prefix);
 		return 1;
 	}
-
+    return 0;
 
 }
 
 
-int deletion(trie** cur, char* str) {
+int trie_deletion(trie** cur, char* str) {
 	/* delete str in cur trie */
 	/* WARNING : need to give the pointer of trie in delete function */
 	if (*cur == NULL) {
@@ -261,7 +262,7 @@ int deletion(trie** cur, char* str) {
 	}
 
 	if (*str) {
-		if (*cur != NULL && (*cur)->ch[CHAR_TO_INDEX(*str)] != NULL && deletion(&((*cur)->ch[CHAR_TO_INDEX(*str)]), str + 1) && (*cur)->is_leaf == 0) {
+		if (*cur != NULL && (*cur)->ch[CHAR_TO_INDEX(*str)] != NULL && trie_deletion(&((*cur)->ch[CHAR_TO_INDEX(*str)]), str + 1) && (*cur)->is_leaf == 0) {
 			if (!has_children(*cur)) {
 				free(*cur);
 				*cur = NULL;
