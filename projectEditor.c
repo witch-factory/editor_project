@@ -2010,7 +2010,7 @@ char* word_recommend(WINDOW* win) { // return selected word from list
 	int key, top = 0;
 	word_node* top_node = list;
 	int x = 1, y = 1, i;
-	char* word = (char*)malloc(sizeof(char)*WORDMAX);
+	//char* word = (char*)malloc(sizeof(char)*WORDMAX);
 
 	word_node* cur = list;
 	for (i = 1; i <= SHOWCNT; i++) {
