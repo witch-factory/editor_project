@@ -1677,21 +1677,23 @@ void editor_process_key_press() {
 		// chk: subwin pos - at cursor OR at word's first letter
 		box(win, 0, 0);
 		int start; // 현재 row에서 prefix의 첫 글자 인덱스를 저장할 변수
-		for (start = Editor.cx; start>=0 || !is_separator(Editor.row[Editor.cy].chars[start]); start--);
+		for (start = Editor.cx - 1; start>0 || !is_separator(Editor.row[Editor.cy].chars[start]); start--);
         //for 문의 부등호 방향 수정함 
-		start++;
-		// trie에서 검색할 prefix: 현재 row에서 인덱스가 [start, Editor.cx]인 substring
+		//start++;
+		// trie에서 검색할 prefix: 현재 row에서 인덱스가 [start, Editor.cx-1 ]인 substring
         if(Editor.cx-start+2>=WORDMAX){break;}
         else{
-            prefix_word=strncpy(prefix_word, &Editor.row[Editor.cy].chars[start], Editor.cx-start);
+            prefix_word=strncpy(prefix_word, &Editor.row[Editor.cy].chars[start], Editor.cx-start+1);
             //prefix의 길이는 Editor.cx-start 이다
-			prefix_word[Editor.cx-start]='\0';
+			prefix_word[Editor.cx-start+1]='\0';
         }
         //fprintf(fp_save, "%s\n", prefix_word);
         auto_complete_suggestion(Editor.auto_complete, prefix_word);
-        //char tmp=Editor.cx-start+'0';
-        //insert_list(&tmp, 1);
-        insert_list(prefix_word, Editor.cx-start);
+        char tmp1=startt+'0';
+		char tmp1=Editor.cx-1+'0';
+        insert_list(&tmp1, 1);
+		insert_list(&tmp2, 1);
+        //insert_list(prefix_word, Editor.cx-start);
 		char* word = word_recommend(win);
 		delwin(win);
 		int word_len;

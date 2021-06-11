@@ -2134,8 +2134,8 @@ int main(int argc, char* argv[]) {
 	}
 	wclear(stdscr);
 	start_color();
-	init_pair(HL_NUMBER, COLOR_GREEN, COLOR_BLACK); //number highlighting
-	init_pair(HL_MATCH, COLOR_WHITE, COLOR_MAGENTA); // highlight of the search result
+	init_pair(HL_NUMBER, COLOR_GREEN, COLOR_BLACK); //珥덈줉??湲?? ?レ옄 ?섏씠?쇱씠??/
+	init_pair(HL_MATCH, COLOR_WHITE, COLOR_MAGENTA); // 寃??寃곌낵 ?섏씠?쇱씠??
 	init_pair(HL_STRING, COLOR_YELLOW, COLOR_BLACK);
 	init_pair(HL_COMMENT, COLOR_PINK, COLOR_BLACK);
 	init_pair(HL_KEYWORD1, COLOR_CYAN, COLOR_BLACK);
