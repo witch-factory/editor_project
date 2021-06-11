@@ -1,6 +1,6 @@
 /* includes */
 // modf: modified parts
-// dbg: 디버깅용 
+// dbg: ?붾쾭源낆슜 
 
 #define _DEFAULT_SOURCE
 #define _BSD_SOURCE
@@ -103,8 +103,8 @@ typedef struct {
 
 typedef struct {
 	int cx;
-	int cy; /* 현재 커서의 위치 */
-	int rx; /* render field index. 만약 탭이 있으면 탭이 차지하는 공간 때문에 rx가 cx보다 더 커짐*/
+	int cy; /* ?꾩옱 而ㅼ꽌???꾩튂 */
+	int rx; /* render field index. 留뚯빟 ??씠 ?덉쑝硫???씠 李⑥??섎뒗 怨듦컙 ?뚮Ц??rx媛 cx蹂대떎 ??而ㅼ쭚*/
 	int rowoff;
 	int coloff;
 	int screenrows;
@@ -113,12 +113,12 @@ typedef struct {
 	char *filename;
 	char status_msg[80];
 	time_t status_msg_time;
-	/* 상태 메시지와 그 타임스탬프 */
+	/* ?곹깭 硫붿떆吏? 洹???꾩뒪?ы봽 */
 	editor_syntax *syntax;
 	editor_row* row;
 	int dirty;
     trie* auto_complete;
-	/* 수정중 플래그 */
+	/* ?섏젙以??뚮옒洹?*/
 }editor_config;
 
 editor_config Editor;
@@ -182,6 +182,7 @@ typedef struct word_node {
 }word_node;
 
 word_node* list = NULL;
+int list_cnt=0;
 
 int wordcnt = 0; // dbg
 char word[WORDMAX]; 
@@ -194,13 +195,13 @@ void editor_set_status_message(const char *fmt, ...);
 void editor_refresh_screen();
 char *editor_prompt(char *prompt, void(*callback)(char*, int));
 
-char* fail[2] = { NULL, }; /* 실패함수. 정방향/역방향 둘 다 있음 */
+char* fail[2] = { NULL, }; /* ?ㅽ뙣?⑥닔. ?뺣갑????갑???????덉쓬 */
 void fail_func(char*);
 
 void find_bracket();
 
 void insert_list(char* start, int len);
-void end_recommend(); // 리스트를 save.txt에 저장. 불필요
+void end_recommend(); // 由ъ뒪?몃? save.txt????? 遺덊븘??
 void erase_list();
 char* word_recommend(WINDOW*);
 
@@ -228,7 +229,7 @@ void disable_raw_mode() {
 void enable_raw_mode() {
 	raw();
 	atexit(disable_raw_mode);
-	//raw 다음에 atexit가 와야 제대로 raw 탈출된다
+	//raw ?ㅼ쓬??atexit媛 ????쒕?濡?raw ?덉텧?쒕떎
 	keypad(stdscr, 1);
 	noecho();
 }
@@ -364,7 +365,7 @@ int trie_search(trie* head, char* str) {
 		cur = cur->ch[CHAR_TO_INDEX(*str)];
 
 		if (cur == NULL) { return 0; }
-		//못 찾음
+		//紐?李얠쓬
 
 		str++;
 	}
@@ -412,7 +413,7 @@ int trie_deletion(trie** cur, char* str) {
 			return 1;
 		}
 		else {
-			//자식이 있다
+			//?먯떇???덈떎
 			(*cur)->is_leaf = 0;
 			return 0;
 		}
@@ -448,7 +449,6 @@ void suggestion_by_prefix(trie* root, char* prefix) {
 	//len = strlen(prefix);
 
 	if (root->is_leaf) {
-		printf("%s\n", prefix);
         insert_list(prefix, strlen(prefix));
         //trie_insert_string(Editor.auto_complete, prefix);
 	}
@@ -481,7 +481,7 @@ int auto_complete_suggestion(trie* root, char* query) {
 	for (level = 0; level < len; level++) {
 		index = CHAR_TO_INDEX(query[level]);
 
-		//이 prefix로 시작하는 게 없다
+		//??prefix濡??쒖옉?섎뒗 寃??녿떎
 		if (!crawl->ch[index]) {
 			return 0;
 		}
@@ -493,7 +493,7 @@ int auto_complete_suggestion(trie* root, char* query) {
 	is_word = crawl->is_leaf == 1 ? 1 : 0;
 	is_last = (has_children(crawl) == 0) ? 1 : 0;
 
-	/* 이 노드가 끝이고, 그 뒤에 이어지는 노드가 없을 때 인쇄 */
+	/* ???몃뱶媛 ?앹씠怨? 洹??ㅼ뿉 ?댁뼱吏???몃뱶媛 ?놁쓣 ???몄뇙 */
 	if (is_word && is_last) {
         //insert_list(query, strlen(query));
 		//printf("%s", query);
@@ -521,7 +521,7 @@ int is_separator(int c) {
 	return 0;
 }
 
-/* 행의 하이라이팅 버퍼 업데이트 */
+/* ?됱쓽 ?섏씠?쇱씠??踰꾪띁 ?낅뜲?댄듃 */
 void editor_update_syntax(editor_row* row) {
 	int i, j, idx, prev_sep, name_keyword; 
 	int in_string;
@@ -560,7 +560,7 @@ void editor_update_syntax(editor_row* row) {
 
 	prev_sep = 1;
 	in_string = 0;
-	/* 문자열 안에 있는지를 나타냄 */
+	/* 臾몄옄???덉뿉 ?덈뒗吏瑜??섑???*/
 	in_comment = (row->idx > 0 && Editor.row[row->idx - 1].hl_open_comment);
 	name_keyword = 0;
 
@@ -582,7 +582,7 @@ void editor_update_syntax(editor_row* row) {
 
 
 		if (multi_line_comment_start_len && multi_line_comment_end_len && !in_string) {
-			/* 여러 줄 주석에 해당되는 부분을 감지한다 */
+			/* ?щ윭 以?二쇱꽍???대떦?섎뒗 遺遺꾩쓣 媛먯??쒕떎 */
 			if (in_comment) {
 				row->hl[i] = HL_MLCOMMENT;
 				if (!strncmp(&row->render[i], multi_line_comment_end, multi_line_comment_end_len)) {
@@ -615,21 +615,21 @@ void editor_update_syntax(editor_row* row) {
 				row->hl[i] = HL_STRING;
 
 				if (c == '\\' && i + 1 < row->rsize) {
-					/* 이스케이프 문자 무시 */
+					/* ?댁뒪耳?댄봽 臾몄옄 臾댁떆 */
 					row->hl[i + 1] = HL_STRING;
 					i += 2;
 					continue;
 				}
 
 				if (c == in_string) { in_string = 0; }
-				/* 닫는 큰/작은 따옴표 감지되면 문자열이 끝난 것이다 */
+				/* ?ル뒗 ???묒? ?곗샂??媛먯??섎㈃ 臾몄옄?댁씠 ?앸궃 寃껋씠??*/
 				i++;
 				prev_sep = 1;
 				continue;
 			}
 			else {
 				if (c == '"' || c == '\'') {
-					/* 여는 따옴표 감지되면 그걸 저장해 둔다 */
+					/* ?щ뒗 ?곗샂??媛먯??섎㈃ 洹멸구 ??ν빐 ?붾떎 */
 					in_string = c;
 					row->hl[i] = HL_STRING;
 					i++;
@@ -642,8 +642,8 @@ void editor_update_syntax(editor_row* row) {
 		if (Editor.syntax->flags & HL_HIGHLIGHT_NUMBERS) {
 			if ((isdigit(c) && (prev_sep || prev_hl == HL_NUMBER))
 				|| (c == '.' && prev_hl == HL_NUMBER)) {
-				/* 현재 문자를 강조표시할 것인가 */
-				/* 소수점도 포함해서 강조 표시를 해준다 */
+				/* ?꾩옱 臾몄옄瑜?媛뺤“?쒖떆??寃껋씤媛 */
+				/* ?뚯닔?먮룄 ?ы븿?댁꽌 媛뺤“ ?쒖떆瑜??댁???*/
 				row->hl[i] = HL_NUMBER;
 				i++;
 				prev_sep = 0;
@@ -654,14 +654,14 @@ void editor_update_syntax(editor_row* row) {
 
 		if (prev_sep) { /* keywords highlight */
 			if (name_keyword) {
-				switch (is_separator(c)) { // is_separator 수정: return 0: separator 아님, return 1 -> 공백, return 2 -> 나머지 separator
+				switch (is_separator(c)) { // is_separator ?섏젙: return 0: separator ?꾨떂, return 1 -> 怨듬갚, return 2 -> ?섎㉧吏 separator
 				case 2:
 					name_keyword = 0;
-					break;  // keyword2가 변수/함수 선언이 아닌 다른 용도로 사용될 때 (eg) sizeof(char)
+					break;  // keyword2媛 蹂???⑥닔 ?좎뼵???꾨땶 ?ㅻⅨ ?⑸룄濡??ъ슜????(eg) sizeof(char)
 				case 0:
 				{
 					int a;
-					// 함수명/변수명 길이 찾기
+					// ?⑥닔紐?蹂?섎챸 湲몄씠 李얘린
 					for (a = 0; i + a < row->rsize && !is_separator(row->render[i + a]); a++);
 					strncpy(word, &row->render[i], a);
 					word[a] = '\0';
@@ -669,8 +669,8 @@ void editor_update_syntax(editor_row* row) {
 					fprintf(fp_save, "[%s]\n", word);
 					// insert it to trie
                     trie_insert_string(Editor.auto_complete, word);
-                    //파싱된 함수명을 트라이에 삽입
-					//insert_list(&row->render[i], a); // 함수명/변수명 리스트에 삽입
+                    //?뚯떛???⑥닔紐낆쓣 ?몃씪?댁뿉 ?쎌엯
+					//insert_list(&row->render[i], a); // ?⑥닔紐?蹂?섎챸 由ъ뒪?몄뿉 ?쎌엯
 					name_keyword = 0; prev_sep = 0;
 					i += a;
 					continue;
@@ -685,7 +685,7 @@ void editor_update_syntax(editor_row* row) {
 					if (kw2) { kwlen--; }
 
 					if (!strncmp(&row->render[i], keywords[j], kwlen) && is_separator(row->render[i + kwlen])) {
-						/* 만약 키워드가 있고 키워드 뒤에 띄어쓰기가 있으면 */
+						/* 留뚯빟 ?ㅼ썙?쒓? ?덇퀬 ?ㅼ썙???ㅼ뿉 ?꾩뼱?곌린媛 ?덉쑝硫?*/
 						for (idx = 0; idx < kwlen; idx++) {
 							row->hl[i + idx] = kw2 ? HL_KEYWORD2 : HL_KEYWORD1;
 						}
@@ -707,7 +707,7 @@ void editor_update_syntax(editor_row* row) {
 	}
 
 	changed = (row->hl_open_comment != in_comment);
-	/* 여러 줄 주석이 끝났는지 아닌지 */
+	/* ?щ윭 以?二쇱꽍???앸궗?붿? ?꾨땶吏 */
 	row->hl_open_comment = in_comment;
 	if (changed&&row->idx + 1 < Editor.numrows) {
 		editor_update_syntax(&Editor.row[row->idx + 1]);
@@ -715,7 +715,7 @@ void editor_update_syntax(editor_row* row) {
 
 }
 
-/* 버려진 함수 */
+/* 踰꾨젮吏??⑥닔 */
 int editor_syntax_to_color(int hl) {
 	switch (hl) {
 	case HL_NUMBER:return 31;
@@ -723,7 +723,7 @@ int editor_syntax_to_color(int hl) {
 	}
 }
 
-/* 파일 이름을 매칭해서 신택스 하이라이팅 부분을 불러온다 */
+/* ?뚯씪 ?대쫫??留ㅼ묶?댁꽌 ?좏깮???섏씠?쇱씠??遺遺꾩쓣 遺덈윭?⑤떎 */
 void editor_select_syntax_highlight() {
 	char *ext;
 	int i, is_ext, filerow;
@@ -783,7 +783,7 @@ int editor_row_rx_to_cx(editor_row *row, int rx) {
 
 
 void editor_update_row(editor_row* row) {
-	/* 탭 처리하기 */
+	/* ??泥섎━?섍린 */
 	int tabs = 0;
 	int j, idx = 0;
 
@@ -804,7 +804,7 @@ void editor_update_row(editor_row* row) {
 		}
 	}
 	row->render[idx] = '\0';
-	/* idx는 row->render에 복사된 문자의 수. 마지막에 널 삽입 */
+	/* idx??row->render??蹂듭궗??臾몄옄???? 留덉?留됱뿉 ???쎌엯 */
 	row->rsize = idx;
 
 	editor_update_syntax(row);
@@ -812,8 +812,8 @@ void editor_update_row(editor_row* row) {
 
 
 void editor_insert_row(int at, char *s, int len) {
-	/* at번째 줄에 에 길이 len 인 문자열 s를 붙여 준다 */
-	/* 원래는 append_row 였다 */
+	/* at踰덉㎏ 以꾩뿉 ??湲몄씠 len ??臾몄옄??s瑜?遺숈뿬 以??*/
+	/* ?먮옒??append_row ???*/
 	int j;
 	int chars_len;
 	if (at<0 || at>Editor.numrows) { return; }
@@ -824,10 +824,10 @@ void editor_insert_row(int at, char *s, int len) {
 	for (j = at + 1; j <= Editor.numrows; j++) {
 		Editor.row[j].idx++;
 	}
-	/* 그 뒤 줄들의 줄번호를 1씩 증가시켜줌 */
+	/* 洹???以꾨뱾??以꾨쾲?몃? 1??利앷??쒖폒以?*/
 
 	Editor.row[at].idx = at;
-	/* 줄 삽입시 초기화 */
+	/* 以??쎌엯??珥덇린??*/
 
 	//int at=Editor.numrows;
 	Editor.row[at].size = len;
@@ -838,7 +838,7 @@ void editor_insert_row(int at, char *s, int len) {
 	}
 	Editor.row[at].chars = malloc(sizeof(char)*(chars_len + 1));
 	Editor.row[at].msize = chars_len + 1;
-	/* 처음에 스크린 크기만큼 할당. */
+	/* 泥섏쓬???ㅽ겕由??ш린留뚰겮 ?좊떦. */
 	memcpy(Editor.row[at].chars, s, len);
 	Editor.row[at].chars[len] = '\0';
 
@@ -866,10 +866,10 @@ void editor_delete_row(int at) {
 	editor_free_row(&Editor.row[at]);
 
 	memmove(&Editor.row[at], &Editor.row[at + 1], sizeof(editor_row)*(Editor.numrows - at - 1));
-	/* 줄을 앞으로 하나 옮겨오기 */
+	/* 以꾩쓣 ?욎쑝濡??섎굹 ??꺼?ㅺ린 */
 
 	for (j = at; j < Editor.numrows - 1; j++) { Editor.row[j].idx--; }
-	/* 줄번호 하나씩 당겨주기 */
+	/* 以꾨쾲???섎굹???밴꺼二쇨린 */
 	Editor.numrows--;
 	Editor.dirty++;
 }
@@ -878,12 +878,12 @@ void editor_delete_row(int at) {
 void editor_row_insert_char(editor_row *row, int at, int c) {
 	if (at<0 || at>row->size) { at = row->size; }
 	if ((row->size + 2) >= row->msize) {
-		/* 硫붾え由ш? ??李⑤㈃ 2諛곕줈 realloc. 硫붾え由?愿由??⑥쑉???꾪빐 ?섏젙??*/
+		/* 筌롫뗀?덄뵳?? ??筌△뫀??2獄쏄퀡以?realloc. 筌롫뗀?덄뵳??온????μ몛???袁る퉸 ??륁젟??*/
 		row->chars = realloc(row->chars, (row->msize) * 2);
 		row->msize *= 2;
 	}
 	memmove(&row->chars[at + 1], &row->chars[at], row->size - at + 1);
-	/* 중간에 삽입할 수도 있으므로, at 뒤의 데이터를 한칸 밀어준다 */
+	/* 以묎컙???쎌엯???섎룄 ?덉쑝誘濡? at ?ㅼ쓽 ?곗씠?곕? ?쒖뭏 諛?댁???*/
 	row->size++;
 	row->chars[at] = c;
 	editor_update_row(row);
@@ -892,7 +892,7 @@ void editor_row_insert_char(editor_row *row, int at, int c) {
 
 
 void editor_row_append_string(editor_row* row, char* s, size_t len) {
-	/* 줄 끝에 길이 len인 문자열 s를 붙인다 */
+	/* 以??앹뿉 湲몄씠 len??臾몄옄??s瑜?遺숈씤??*/
 	row->chars = realloc(row->chars, row->size + len + 1);
 	row->msize = row->size + len + 1;
 	memcpy(&row->chars[row->size], s, len);
@@ -914,9 +914,9 @@ void editor_row_delete_char(editor_row *row, int at) {
 /*** editor operations ***/
 
 void editor_insert_char(int c) {
-	/* 커서 위치에 문자 하나 추가 */
+	/* 而ㅼ꽌 ?꾩튂??臾몄옄 ?섎굹 異붽? */
 	if (Editor.cy == Editor.numrows) {
-		/* 마지막 줄에 줄 하나 추가하는 경우 */
+		/* 留덉?留?以꾩뿉 以??섎굹 異붽??섎뒗 寃쎌슦 */
 		editor_insert_row(Editor.numrows, "", 0);
 	}
 	editor_row_insert_char(&Editor.row[Editor.cy], Editor.cx, c);
@@ -964,13 +964,13 @@ void editor_delete_char() {
 /*** file I/O ***/
 
 char *editor_rows_to_string(int *buflen) {
-	/* 문서 저장을 위해 에디터의 문자열을 하나의 문자열 배열에 담기 */
+	/* 臾몄꽌 ??μ쓣 ?꾪빐 ?먮뵒?곗쓽 臾몄옄?댁쓣 ?섎굹??臾몄옄??諛곗뿴???닿린 */
 	int i, total_len = 0;
 	char* buf;
 	char* p;
 	for (i = 0; i < Editor.numrows; i++) {
 		total_len += Editor.row[i].size + 1;
-		/* 1은 각 행의 개행 문자를 위해서 추가 할당 */
+		/* 1? 媛??됱쓽 媛쒗뻾 臾몄옄瑜??꾪빐??異붽? ?좊떦 */
 	}
 	*buflen = total_len;
 
@@ -1016,7 +1016,7 @@ void editor_open(char *filename) {
 
 	fprintf(debug_file, "number of rows : %d\n", Editor.numrows);
 	editor_select_syntax_highlight();
-	/* 파일 열고 나서 문자열 복사 후 신택스 하이라이팅 */
+	/* ?뚯씪 ?닿퀬 ?섏꽌 臾몄옄??蹂듭궗 ???좏깮???섏씠?쇱씠??*/
 	free(line);
 	fclose(fp); 
 
@@ -1037,16 +1037,16 @@ void editor_save() {
 			return;
 		}
 		editor_select_syntax_highlight();
-	} /* 열려 있는 파일 없다 */
+	} /* ?대젮 ?덈뒗 ?뚯씪 ?녿떎 */
 
 
 	buf = editor_rows_to_string(&len);
-	/* 에디터에 담긴 내용을 문자열 배열 하나에 다 담았다. */
+	/* ?먮뵒?곗뿉 ?닿릿 ?댁슜??臾몄옄??諛곗뿴 ?섎굹?????댁븯?? */
 
 	//save_file=fopen(Editor.filename, "w");
 
 	fd = open(Editor.filename, O_RDWR | O_CREAT, 0644);
-	/* 추가 : 저장할 때 fnctl같은 변태 함수 안쓰고 할 수 있게 해본다. fprintf 같은 걸로 되려나. step 106 참고 */
+	/* 異붽? : ??ν븷 ??fnctl媛숈? 蹂???⑥닔 ?덉벐怨??????덇쾶 ?대낯?? fprintf 媛숈? 嫄몃줈 ?섎젮?? step 106 李멸퀬 */
 
 	if (fd != -1) {
 		if (ftruncate(fd, len) != -1) {
@@ -1074,7 +1074,7 @@ void fail_func(char* pat) {
 		fail[i] = realloc(fail[i], sizeof(char)*n);
 	}
 
-	/* 오른쪽에 있는 단어 탐색하는 실패함수 */
+	/* ?ㅻⅨ履쎌뿉 ?덈뒗 ?⑥뼱 ?먯깋?섎뒗 ?ㅽ뙣?⑥닔 */
 	fail[0][0] = -1;
 	for (k = 1; k < n; k++) {
 		i = fail[0][k - 1];
@@ -1098,13 +1098,13 @@ void fail_func(char* pat) {
 
 
 char* KMP_match(char* string, char* pat, int* i, int direction) {
-	/* string의 (*i)번째 인덱스에서 탐색 시작 */
+	/* string??(*i)踰덉㎏ ?몃뜳?ㅼ뿉???먯깋 ?쒖옉 */
 	int k;
 	int lens = strlen(string);
 	int lenp = strlen(pat);
 
 	if (direction == 1) {
-		/* 오른쪽 방향 탐색 */
+		/* ?ㅻⅨ履?諛⑺뼢 ?먯깋 */
 		k = 0;
 		while ((*i) < lens && k < lenp) {
 			if (string[*i] == pat[k]) {
@@ -1122,7 +1122,7 @@ char* KMP_match(char* string, char* pat, int* i, int direction) {
 	}
 
 	else {
-		/* 왼쪽 방향 탐색 */
+		/* ?쇱そ 諛⑺뼢 ?먯깋 */
 		k = lenp - 1;
 		while ((*i) >= 0 && k >= 0) {
 			if (string[*i] == pat[k]) {
@@ -1143,7 +1143,7 @@ char* KMP_match(char* string, char* pat, int* i, int direction) {
 /*** find ***/
 
 void editor_find_callback(char* query, int key) {
-	/* 특정 쿼리 찾는 콜백함수 */
+	/* ?뱀젙 荑쇰━ 李얜뒗 肄쒕갚?⑥닔 */
 	if (query[0] == '\0') { return; } //check
 	static int last_match = -1;
 	static int direction = 1;
@@ -1166,7 +1166,7 @@ void editor_find_callback(char* query, int key) {
 
 
 	if (key == '\r' || key == KEY_ESC) {
-		/* 검색 취소하는 경우 */
+		/* 寃??痍⑥냼?섎뒗 寃쎌슦 */
 		last_match = -1;
 		direction = 1;
 		last_direction = 1;
@@ -1191,7 +1191,7 @@ void editor_find_callback(char* query, int key) {
 	fail_func(query);
 
 	for (i = 0; i < Editor.numrows; i++) {
-		/*if(idx<0 || idx>=Editor.row[current].rsize){ //전에 탐색한 줄에 단어 없다
+		/*if(idx<0 || idx>=Editor.row[current].rsize){ //?꾩뿉 ?먯깋??以꾩뿉 ?⑥뼱 ?녿떎
 			current+=direction;
 			if(current==-1){current=Editor.numrows-1;}
 			else if(current==Editor.numrows){current=0;}
@@ -1273,7 +1273,7 @@ typedef struct {
 
 
 void buffer_append(buffer *ab, const char *s, int len) {
-	/* buffer 에 길이 len인 문자열 s추가 */
+	/* buffer ??湲몄씠 len??臾몄옄??s異붽? */
 	char *new = realloc(ab->b, (ab->len + len));
 
 	if (new == NULL) { return; }
@@ -1297,13 +1297,13 @@ typedef struct {
 #define HL_BUFFER_INIT {NULL,0}
 
 void hl_buffer_append(hl_buffer *hlb, const char* hl, int len) {
-	/* 하이라이팅 문자열 추가 */
+	/* ?섏씠?쇱씠??臾몄옄??異붽? */
 	int i;
 	char *new_hl = realloc(hlb->b, hlb->len + len);
 
 	if (new_hl == NULL) { return; }
 	if (hl == NULL) {
-		/* 복사할 하이라이팅 배열로 널 들어오면 len만큼을 NORMAL 프린트로 */
+		/* 蹂듭궗???섏씠?쇱씠??諛곗뿴濡????ㅼ뼱?ㅻ㈃ len留뚰겮??NORMAL ?꾨┛?몃줈 */
 		for (i = 0; i < len; i++) {
 			new_hl[hlb->len + i] = HL_NORMAL;
 		}
@@ -1332,13 +1332,13 @@ void editor_scroll() {
 	}
 
 
-	/* 한줄씩 위/아래로 가게 적절히 조절 */
+	/* ?쒖쨪?????꾨옒濡?媛寃??곸젅??議곗젅 */
 	if (Editor.cy < Editor.rowoff) {
 		Editor.rowoff = Editor.cy;
-		/* 커서가 우리 화면보다 위에 있을 때 */
+		/* 而ㅼ꽌媛 ?곕━ ?붾㈃蹂대떎 ?꾩뿉 ?덉쓣 ??*/
 	}
 	if (Editor.cy >= Editor.rowoff + Editor.screenrows) {
-		/* 커서가 우리 화면보다 아래 있을 때 */
+		/* 而ㅼ꽌媛 ?곕━ ?붾㈃蹂대떎 ?꾨옒 ?덉쓣 ??*/
 		Editor.rowoff = Editor.cy - Editor.screenrows + 1;
 	}
 	if (Editor.rx < Editor.coloff) {
@@ -1351,8 +1351,8 @@ void editor_scroll() {
 
 
 void editor_start_screen(buffer *ab) {
-	/* kilo의 draw_rows를 시작 화면에서만 줄 그리게 바꿈 */
-	/* 코드 에디터 시작 화면 */
+	/* kilo??draw_rows瑜??쒖옉 ?붾㈃?먯꽌留?以?洹몃━寃?諛붽퓞 */
+	/* 肄붾뱶 ?먮뵒???쒖옉 ?붾㈃ */
 	int y;
 	for (y = 0; y < Editor.screenrows + 1; y++) {
 		if (Editor.numrows == 0 && y == Editor.screenrows / 3) {
@@ -1382,7 +1382,7 @@ void editor_print_rows(buffer *ab, hl_buffer *hlb) {
 
 	for (y = 0; y < Editor.screenrows; y++) {
 		filerow = y + Editor.rowoff;
-		/* rowoff부터 시작해서 screenrow 개수만큼 출력하기*/
+		/* rowoff遺???쒖옉?댁꽌 screenrow 媛쒖닔留뚰겮 異쒕젰?섍린*/
 		if (filerow < Editor.numrows) {
 			len = Editor.row[filerow].rsize - Editor.coloff;
 			if (len < 0) { len = 0; }
@@ -1393,7 +1393,7 @@ void editor_print_rows(buffer *ab, hl_buffer *hlb) {
 
 			for (j = 0; j < len; j++) {
 				if (!isascii(c[j])) {
-					/* 제어 문자는 ?를 넣어줌 */
+					/* ?쒖뼱 臾몄옄???瑜??ｌ뼱以?*/
 					sym = '?';
 					buffer_append(ab, &sym, 1);
 				}
@@ -1413,17 +1413,17 @@ void editor_print_rows(buffer *ab, hl_buffer *hlb) {
 
 
 void print_buffer_on_screen(buffer *ab, hl_buffer *hlb) {
-	/* 버퍼를 화면에 한글자씩 출력해줌. 신택스 하이라이팅을 위하여. */
+	/* 踰꾪띁瑜??붾㈃???쒓??먯뵫 異쒕젰?댁쨲. ?좏깮???섏씠?쇱씠?낆쓣 ?꾪븯?? */
 	int i;
 	char cur;
 	char current_color = HL_NORMAL;
 	wmove(stdscr, 0, 0);
-	/* 프린트하기 전에 먼저 0,0위치로 옮겨준다 */
+	/* ?꾨┛?명븯湲??꾩뿉 癒쇱? 0,0?꾩튂濡???꺼以??*/
 	//wprintw(stdscr, "%s", ab->b);
 	for (i = 0; i < ab->len; i++) {
 		cur = ab->b[i];
 		if (current_color != hlb->b[i]) {
-			/* 색이 바뀔 때만 출력 */
+			/* ?됱씠 諛붾??뚮쭔 異쒕젰 */
 			attroff(COLOR_PAIR(current_color));
 			current_color = hlb->b[i];
 			attron(COLOR_PAIR(current_color));
@@ -1436,20 +1436,20 @@ void print_buffer_on_screen(buffer *ab, hl_buffer *hlb) {
 
 
 void editor_draw_status_bar() {
-	/* 추가 : 색 반전해서 출력하기. 배경 흰색/ 글씨 검정으로 출력하게 하면 될듯 */
-	/* 하단 상태바 출력 */
+	/* 異붽? : ??諛섏쟾?댁꽌 異쒕젰?섍린. 諛곌꼍 ?곗깋/ 湲??寃?뺤쑝濡?異쒕젰?섍쾶 ?섎㈃ ?좊벏 */
+	/* ?섎떒 ?곹깭諛?異쒕젰 */
 	int len, rlen;
 	char status[80], rstatus[80];
 	//char negative=HL_NEGATIVE;
 	len = snprintf(status, sizeof(status), "%.20s - %d lines %s", (Editor.filename ? Editor.filename : "[No Name]"),
 		Editor.numrows, (Editor.dirty ? "(modifying)" : ""));
-	/* 포맷 문자열 출력 */
+	/* ?щ㎎ 臾몄옄??異쒕젰 */
 	rlen = snprintf(rstatus, sizeof(rstatus), "%s | %d line / %d line", Editor.syntax ? Editor.syntax->file_type : "no filtype", Editor.cy, Editor.numrows);
 	if (len > Editor.screencols) { len = Editor.screencols; }
 
 	attron(A_REVERSE);
 	mvwprintw(stdscr, Editor.screenrows, 0, "%s", status);
-	/* 즉 다른 문장들은 Editor.screenrows-1 번째 줄까지 출력되어야 한다 */
+	/* 利??ㅻⅨ 臾몄옣?ㅼ? Editor.screenrows-1 踰덉㎏ 以꾧퉴吏 異쒕젰?섏뼱???쒕떎 */
 	while (len < Editor.screencols) {
 		if (Editor.screencols - len == rlen) {
 			mvwprintw(stdscr, Editor.screenrows, len, "%s", rstatus);
@@ -1483,7 +1483,7 @@ void editor_draw_status_bar() {
 		}
 	}*/
 	//buffer_append(ab, "\n", 1);
-	/* 추가 : 상태바가 색 반전으로 출력되도록 코드를 고칠 것 */
+	/* 異붽? : ?곹깭諛붽? ??諛섏쟾?쇰줈 異쒕젰?섎룄濡?肄붾뱶瑜?怨좎튌 寃?*/
 }
 
 
@@ -1505,7 +1505,7 @@ void editor_draw_message_bar() {
 		wprintw(stdscr, " ");
 	}
 	attroff(A_REVERSE);
-	/* 추가 : 상태바가 색 반전으로 출력되도록 코드를 고칠 것 */
+	/* 異붽? : ?곹깭諛붽? ??諛섏쟾?쇰줈 異쒕젰?섎룄濡?肄붾뱶瑜?怨좎튌 寃?*/
 }
 
 
@@ -1531,7 +1531,7 @@ void editor_refresh_screen() {
 
 
 void editor_set_status_message(const char *fmt, ...) {
-	/* 가변 인자 함수. 상태 메시지를 설정한다. */
+	/* 媛蹂 ?몄옄 ?⑥닔. ?곹깭 硫붿떆吏瑜??ㅼ젙?쒕떎. */
 	va_list ap;
 	va_start(ap, fmt);
 	vsnprintf(Editor.status_msg, sizeof(Editor.status_msg), fmt, ap);
@@ -1543,7 +1543,7 @@ void editor_set_status_message(const char *fmt, ...) {
 /*** input ***/
 
 char *editor_prompt(char *prompt, void(*callback)(char*, int)) {
-	/* 검색어를 입력할 때마다 파일이 검색되게 하기 위해 콜백 함수 사용 */
+	/* 寃?됱뼱瑜??낅젰???뚮쭏???뚯씪??寃?됰릺寃??섍린 ?꾪빐 肄쒕갚 ?⑥닔 ?ъ슜 */
 	int c;
 	size_t bufsize = 128;
 	char *buf = malloc(bufsize);
@@ -1573,7 +1573,7 @@ char *editor_prompt(char *prompt, void(*callback)(char*, int)) {
 			}
 		}
 		else if (!iscntrl(c) && c < 128) {
-			/* 입력은 char 형으로 제한 */
+			/* ?낅젰? char ?뺤쑝濡??쒗븳 */
 			if (buflen == bufsize - 1) {
 				bufsize *= 2;
 				buf = realloc(buf, bufsize);
@@ -1587,7 +1587,7 @@ char *editor_prompt(char *prompt, void(*callback)(char*, int)) {
 
 
 void editor_move_cursor(int key) {
-	/* 끝줄에서의 오른쪽키 처리 다시 확인할 것 */
+	/* ?앹쨪?먯꽌???ㅻⅨ履쏀궎 泥섎━ ?ㅼ떆 ?뺤씤??寃?*/
 	editor_row *row = (Editor.cy >= Editor.numrows ? NULL : &Editor.row[Editor.cy]);
 
 	switch (key) {
@@ -1595,14 +1595,14 @@ void editor_move_cursor(int key) {
 		if (Editor.cy > 0) {
 			Editor.cy--;
 			if (Editor.cx > Editor.row[Editor.cy].size) {
-				/* 이동한 줄이 더 사이즈가 작을 수도 있다. 그때의 처리 */
+				/* ?대룞??以꾩씠 ???ъ씠利덇? ?묒쓣 ?섎룄 ?덈떎. 洹몃븣??泥섎━ */
 				Editor.cx = Editor.row[Editor.cy].size;
 			}
 		}
 		break;
 
 	case KEY_DOWN:
-		/* 추가 : 왠지 스크롤 아래로 내려갈때 커서가 맨 끝으로 간다 */
+		/* 異붽? : ?좎? ?ㅽ겕濡??꾨옒濡??대젮媛덈븣 而ㅼ꽌媛 留??앹쑝濡?媛꾨떎 */
 		if (Editor.cy < Editor.numrows - 1) {
 			Editor.cy++;
 			if (Editor.cx > Editor.row[Editor.cy].size) {
@@ -1623,7 +1623,7 @@ void editor_move_cursor(int key) {
 
 	case KEY_RIGHT:
 		if (row && Editor.cx < row->size) {
-			/* 일정 사이즈 이상으로 갈 수 없게 통제해 두자 */
+			/* ?쇱젙 ?ъ씠利??댁긽?쇰줈 媛????녾쾶 ?듭젣???먯옄 */
 			Editor.cx++;
 		}
 		else if (row && Editor.cx == row->size && Editor.cy < Editor.numrows - 1) {
@@ -1675,16 +1675,15 @@ void editor_process_key_press() {
         //to get special character
 		// chk: border line
 		// chk: subwin pos - at cursor OR at word's first letter
-		box(win, 0, 0);
-		int start; // 현재 row에서 prefix의 첫 글자 인덱스를 저장할 변수
-		for (start = Editor.cx; start>=0 || !is_separator(Editor.row[Editor.cy].chars[start]); start--);
-        //for 문의 부등호 방향 수정함 
-		start++;
-		// trie에서 검색할 prefix: 현재 row에서 인덱스가 [start, Editor.cx]인 substring
+		box(win, 0,0);
+		int start; // ?꾩옱 row?먯꽌 prefix??泥?湲???몃뜳?ㅻ? ??ν븷 蹂??
+		for (start = Editor.cx; start>0 && !is_separator(Editor.row[Editor.cy].chars[start - 1]); start--);
+        //for 臾몄쓽 遺?깊샇 諛⑺뼢 ?섏젙??
+		// trie?먯꽌 寃?됲븷 prefix: ?꾩옱 row?먯꽌 ?몃뜳?ㅺ? [start, Editor.cx]??substring
         if(Editor.cx-start+2>=WORDMAX){break;}
         else{
             prefix_word=strncpy(prefix_word, &Editor.row[Editor.cy].chars[start], Editor.cx-start);
-            //prefix의 길이는 Editor.cx-start 이다
+            //prefix??湲몄씠??Editor.cx-start ?대떎
 			prefix_word[Editor.cx-start]='\0';
         }
         //fprintf(fp_save, "%s\n", prefix_word);
@@ -1700,7 +1699,7 @@ void editor_process_key_press() {
             word_len=strlen(word);
 			for (int i = 0; i < word_len; i++) {
 				if (word[i] == Editor.row[Editor.cy].chars[start + i]) continue; 
-				// word 중 스크린에 없는 부분만 입력한다.
+				// word 以??ㅽ겕由곗뿉 ?녿뒗 遺遺꾨쭔 ?낅젰?쒕떎.
 				editor_insert_char(word[i]);
 			}
 		}
@@ -1757,7 +1756,7 @@ void editor_process_key_press() {
 
 	case KEY_PPAGE:
 	case KEY_NPAGE:
-		/* 페이지 단위로 이동하기. PAGEUP, PAGEDOWN */
+		/* ?섏씠吏 ?⑥쐞濡??대룞?섍린. PAGEUP, PAGEDOWN */
 	{
 		if (c == KEY_PPAGE) {
 			Editor.cy = Editor.rowoff;
@@ -1772,7 +1771,7 @@ void editor_process_key_press() {
 			editor_move_cursor(c == KEY_PPAGE ? KEY_UP : KEY_DOWN);
 		}
 		Editor.cx = 0;
-		/* 행의 맨 첫 위치로 */
+		/* ?됱쓽 留?泥??꾩튂濡?*/
 	}
 	break;
 
@@ -1818,7 +1817,7 @@ void init_editor() {
 	}
 
 	Editor.screenrows -= 2;
-	/* 상태바를 하단에 만들기 위한 여유 공간 */
+	/* ?곹깭諛붾? ?섎떒??留뚮뱾湲??꾪븳 ?ъ쑀 怨듦컙 */
 }
 
 
@@ -1849,24 +1848,24 @@ void delete_char_list(char_node** clist) {
 }
 
 
-/*** FindBracket: 괄호 쌍 찾기 ***/
+/*** FindBracket: 愿꾪샇 ??李얘린 ***/
 /*
 bracket_pair[2][2]
-하이라이트 하기 위해 괄호쌍 위치 일단 저장. 현재 사용 안함.
-bracket_pair[0]에 쌍을 찾을 괄호 위치 저장
-bracket_pair[1] = {-1,-1} 이면 현재 괄호에 쌍 없음.
+?섏씠?쇱씠???섍린 ?꾪빐 愿꾪샇???꾩튂 ?쇰떒 ??? ?꾩옱 ?ъ슜 ?덊븿.
+bracket_pair[0]???띿쓣 李얠쓣 愿꾪샇 ?꾩튂 ???
+bracket_pair[1] = {-1,-1} ?대㈃ ?꾩옱 愿꾪샇?????놁쓬.
 */
 void find_bracket() {
 	int r = Editor.cy;
 	int c = editor_row_cx_to_rx(&Editor.row[r], Editor.cx); 
 	char_node* stack = NULL;
 	short int found = 0;
-	if (Editor.row[r].render[c] == '{' && Editor.row[r].hl[c] == HL_NORMAL) { // 커서 위치에 string/comment가 아닌 '{'가 있을 때
+	if (Editor.row[r].render[c] == '{' && Editor.row[r].hl[c] == HL_NORMAL) { // 而ㅼ꽌 ?꾩튂??string/comment媛 ?꾨땶 '{'媛 ?덉쓣 ??
 		insert_char_list(&stack, '{');
 		bracket_pair[0][0] = r;
 		bracket_pair[0][1] = c;
 		c++;
-		/* 파일 끝까지 완전 탐색*/
+		/* ?뚯씪 ?앷퉴吏 ?꾩쟾 ?먯깋*/
 		for (; c < Editor.row[r].rsize; c++) {
 			if (Editor.row[r].render[c] == '{' && Editor.row[r].hl[c] == HL_NORMAL) {
 				insert_char_list(&stack, '{');
@@ -1903,12 +1902,12 @@ void find_bracket() {
 		}
 
 	}
-	else if (Editor.row[r].render[c] == '}'&& Editor.row[r].hl[c] == HL_NORMAL) { // 커서 위치에 string/comment가 아닌 '}'가 있을 때
+	else if (Editor.row[r].render[c] == '}'&& Editor.row[r].hl[c] == HL_NORMAL) { // 而ㅼ꽌 ?꾩튂??string/comment媛 ?꾨땶 '}'媛 ?덉쓣 ??
 		insert_char_list(&stack, '}');
 		bracket_pair[0][0] = r;
 		bracket_pair[0][1] = c;
 		c--;
-		/* 파일 끝까지 완전 탐색*/
+		/* ?뚯씪 ?앷퉴吏 ?꾩쟾 ?먯깋*/
 		for (; c >= 0; c--) {
 			if (Editor.row[r].render[c] == '{'&& Editor.row[r].hl[c] == HL_NORMAL) {
 				delete_char_list(&stack);
@@ -1950,7 +1949,7 @@ void find_bracket() {
 
 
 /*** linked list ***/
-
+// list: circular list ( no head node)
 void insert_list(char* start, int len) {
 	word_node* new;
 	new = (word_node*)malloc(sizeof(word_node));
@@ -1959,29 +1958,29 @@ void insert_list(char* start, int len) {
 	new->word[len] = '\0';
 
 	if (list) {
-		/* 리스트에 삽입 */
-		new->prev = NULL;
+		/* 由ъ뒪?몄뿉 ?쎌엯 */
+		new->prev = list->prev;
+		list->prev->next = new;
 		new->next = list;
 		list->prev = new;
 		list = new;
 	}
 	else {
-		new->prev = NULL;
-		new->next = NULL;
+		new->prev = new->next = new;
 		list = new;
 	}
-	wordcnt++;
-
+	list_cnt++;
 }
 
 void erase_list() {
-	/* erast the whole list. 전역변수 list가 존재 */
+	/* erast the whole list. ?꾩뿭蹂??list媛 議댁옱 */
 	word_node* del;
 	while (list) {
 		del = list;
 		list = list->next;
 		free(del);
 	}
+	list_cnt=0;
 }
 
 /*** save keywords to save.txt ***/
@@ -2012,15 +2011,14 @@ char* word_recommend(WINDOW* win) { // return selected word from list
 	int key, top = 0;
 	word_node* top_node = list;
 	int x = 1, y = 1, i;
-	char* word = (char*)malloc(sizeof(char)*WORDMAX);
 
+	mvwprintw(win, SHOWCNT+1, 1, "< %d >", list_cnt);//dbg
 	word_node* cur = list;
 	for (i = 1; i <= SHOWCNT; i++) {
-		if (!cur) break;
+		if (i>list_cnt) break;
 		mvwprintw(win, i, 1, cur->word);
 		cur = cur->next;
 	}
-	//mvwprintw(win, i, 1, "%d", top + y - 1); //dbg
 	wrefresh(win);
 	wmove(win, y, x);
 
@@ -2031,7 +2029,7 @@ char* word_recommend(WINDOW* win) { // return selected word from list
 		case KEY_ENTER:
 			cur = top_node;
 			for (i = 1; i < y; i++) cur = cur->next;
-			return cur->word; // chk : out of bounds
+			return cur->word; 
 			break;
 
 		case KEY_ESC:
@@ -2043,28 +2041,27 @@ char* word_recommend(WINDOW* win) { // return selected word from list
 		case 's':
 		case 'd':
 			y++;
+			if (y > list_cnt) y = 1; // when list_cnt < SHOWCNT
+
 			if (y > SHOWCNT) {
 				top++;
 				top_node = top_node->next;
 				y = SHOWCNT;
-				if (top + y >= wordcnt) {
+				if (top > list_cnt) { // moved past the last of word in list
 					top = 0;
-					top_node = list;
-					y = 1;
+					top_node = list->next;
 				}
+				cur = top_node;
 				for (i = 1; i <= SHOWCNT; i++) {
 					wmove(win, i, 1);
 					wclrtoeol(win);
-					cur = top_node;
-					if (cur) {
-						mvwprintw(win, i, 1, cur->word);
-						cur = cur->next;
-					}
+					mvwprintw(win, i, 1, cur->word);
+					cur = cur->next;
 				}
 			}
-			wmove(win, SHOWCNT + 1, 1); //dbg
-			wclrtoeol(win); //dbg
-			mvwprintw(win, SHOWCNT + 1, 1, "%d", top + y - 1); //dbg
+			//wmove(win, SHOWCNT + 1, 1); //dbg
+			//wclrtoeol(win); //dbg
+			//mvwprintw(win, SHOWCNT + 1, 1, "%d", top + y); //dbg
 			wrefresh(win);
 			wmove(win, y, x);
 
@@ -2075,31 +2072,28 @@ char* word_recommend(WINDOW* win) { // return selected word from list
 		case 'w':
 		case 'a':
 			y--;
-			if (y == 0) {
-				y = 1;
-				top--;
-				top_node = top_node->prev;
-				if (!top_node) {
-					top = wordcnt - SHOWCNT;
-					top_node = list->prev;
-					for (i = 1; i <= 4; i++) {
-						top_node = top_node->prev;
+			if (y <= 0) {
+				if (list_cnt < SHOWCNT) y = list_cnt;
+				else {
+					y = 1;
+					top--;
+					top_node = top_node->prev;
+					if (top <= 0) {
+						top = list_cnt;
+						top_node = list->prev;
 					}
-					y = SHOWCNT;
-				}
-				cur = top_node;
-				for (i = 1; i <= SHOWCNT; i++) {
-					wmove(win, i, 1);
-					wclrtoeol(win);
-					if (cur) {
+					cur = top_node;
+					for (i = 1; i <= SHOWCNT; i++) {
+						wmove(win, i, 1);
+						wclrtoeol(win);
 						mvwprintw(win, i, 1, cur->word);
 						cur = cur->next;
 					}
 				}
 			}
-			wmove(win, SHOWCNT + 1, 1); //dbg
-			wclrtoeol(win); //dbg
-			mvwprintw(win, SHOWCNT + 1, 1, "%d", top + y - 1); //dbg
+			//wmove(win, SHOWCNT + 1, 1); //dbg
+			//wclrtoeol(win); //dbg
+			//mvwprintw(win, SHOWCNT + 1, 1, "%d", top + y); //dbg
 			wrefresh(win);
 			wmove(win, y, x);
 			break;
@@ -2118,7 +2112,7 @@ int main(int argc, char* argv[]) {
 	fp_save = fopen("save.txt", "w"); //dbg
 
 	setlocale(LC_ALL, "");
-	//유니코드 가능하게 만들어줌
+	//?좊땲肄붾뱶 媛?ν븯寃?留뚮뱾?댁쨲
 	initscr();
 	enable_raw_mode();
 	init_editor();
@@ -2140,8 +2134,8 @@ int main(int argc, char* argv[]) {
 	}
 	wclear(stdscr);
 	start_color();
-	init_pair(HL_NUMBER, COLOR_GREEN, COLOR_BLACK); //초록색 글씨. 숫자 하이라이팅*/
-	init_pair(HL_MATCH, COLOR_WHITE, COLOR_MAGENTA); // 검색 결과 하이라이팅
+	init_pair(HL_NUMBER, COLOR_GREEN, COLOR_BLACK); //number highlighting
+	init_pair(HL_MATCH, COLOR_WHITE, COLOR_MAGENTA); // highlight of the search result
 	init_pair(HL_STRING, COLOR_YELLOW, COLOR_BLACK);
 	init_pair(HL_COMMENT, COLOR_PINK, COLOR_BLACK);
 	init_pair(HL_KEYWORD1, COLOR_CYAN, COLOR_BLACK);
