@@ -495,7 +495,7 @@ int auto_complete_suggestion(trie* root, char* query) {
 
 	/* 이 노드가 끝이고, 그 뒤에 이어지는 노드가 없을 때 인쇄 */
 	if (is_word && is_last) {
-        insert_list(query, strlen(query));
+        //insert_list(query, strlen(query));
 		//printf("%s", query);
 		return -1;
 	}
@@ -1691,9 +1691,10 @@ void editor_process_key_press() {
         auto_complete_suggestion(Editor.auto_complete, prefix_word);
         //char tmp=Editor.cx-start+'0';
         //insert_list(&tmp, 1);
-        insert_list(prefix_word, Editor.cx-start);
+        //insert_list(prefix_word, Editor.cx-start);
 		char* word = word_recommend(win);
 		delwin(win);
+		erase_list();
 		int word_len;
 		if (word!=NULL) { // insert word if word exists
             word_len=strlen(word);
@@ -2103,6 +2104,7 @@ char* word_recommend(WINDOW* win) { // return selected word from list
 			wmove(win, y, x);
 			break;
 		}
+		//box(win,0,0);
 	}
 }
 
