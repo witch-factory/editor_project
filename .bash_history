@@ -901,4 +901,23 @@ make -B
 ./project
 ./project projectEditor.c
 make -B
+<<<<<<< Updated upstream
 >>>>>>> 383c9ae79814e103a977bcfcb64fe6ed973a61ed
+=======
+sudo chmod 777 editor_func.h
+make -B
+./project projectEditor.c
+make -B
+./project C4.c
+./project test.c
+touch trie.c
+./project main.c
+make -B
+gcc trie.c
+./a.out
+gcc trie.c
+./a.out
+gcc trie.c
+./a.out
+make -B
+>>>>>>> Stashed changes

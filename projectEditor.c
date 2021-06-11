@@ -63,6 +63,20 @@ enum editor_highlight {
 #define COLOR_SKYBLUE 14
 #define COLOR_IVORY 15
 
+
+/* trie structure for autocomplete */
+
+#define CHAR_SIZE 96
+/* 32~127 ASCII code is used. */
+#define CHAR_TO_INDEX(c) ((int)c - (int)' ')
+
+typedef struct trie {
+	int is_leaf;
+	int branch;
+	int words;
+	struct trie* ch[CHAR_SIZE];
+}trie;
+
 /*** data ***/
 
 typedef struct {
@@ -103,6 +117,7 @@ typedef struct {
 	editor_syntax *syntax;
 	editor_row* row;
 	int dirty;
+    trie* auto_complete;
 	/* 수정중 플래그 */
 }editor_config;
 
@@ -110,20 +125,20 @@ editor_config Editor;
 
 /*** bracket check ***/
 
-int bracket_pair[2][2]; // modf
+int bracket_pair[2][2];
 
 /*** file types ***/
 
 char *C_highlight_extensions[] = { ".c", ".h", ".cpp", NULL };
 
-char *C_highlight_keywords[] = { // modf
+char *C_highlight_keywords[] = { 
 	/* C keywords */
 	"auto","break","case","continue","default","do","else","enum",
 	"extern","for","goto","if","register","return","sizeof","static",
-	"struct|","switch","typedef","union|","volatile","while", "define|", "NULL",
+	"struct","switch","typedef","union|","volatile","while", "define", "NULL",
 
 	/* C++ Keywords */
-	"alignas","alignof","and","and_eq","asm","bitand","bitor","class|",
+	"alignas","alignof","and","and_eq","asm","bitand","bitor","class",
 	"compl","constexpr","const_cast","deltype","delete","dynamic_cast",
 	"explicit","export","false","friend","inline","mutable","namespace",
 	"new","noexcept","not","not_eq","nullptr","operator","or","or_eq",
@@ -169,7 +184,7 @@ typedef struct word_node {
 word_node* list = NULL;
 
 int wordcnt = 0; // dbg
-char word[WORDMAX]; // modf
+char word[WORDMAX]; 
 FILE* fp_save;
 
 
@@ -295,19 +310,8 @@ char* string_copy(char* original) {
 }
 
 
-/*** trie for autocomplete ***/
 
-#define CHAR_SIZE 96
-/* 32~127 ASCII code is used. */
-#define CHAR_TO_INDEX(c) ((int)c - (int)' ')
-
-typedef struct trie {
-	int is_leaf;
-	int branch;
-	int words;
-	struct trie* ch[CHAR_SIZE];
-}trie;
-
+/*** trie functions ***/
 
 trie* get_new_trie_node() {
 	int i;
@@ -437,14 +441,16 @@ void free_trie(trie* node) {
 
 /*** autocomplete functions ***/
 
-void suggestion_by_prefix(trie* root, char* prefix) {
-	//find the words starts with prefix string
+void suggestion_by_prefix(trie* root, char* prefix, int len) {
+	//find the words starts with prefix string, with length len
 	int i;
 	//int len;
 	//len = strlen(prefix);
 
 	if (root->is_leaf) {
 		printf("%s\n", prefix);
+        insert_list(prefix, len);
+        //trie_insert_string(Editor.auto_complete, prefix);
 	}
 
 	if (has_children(root) == 0) {
@@ -455,19 +461,19 @@ void suggestion_by_prefix(trie* root, char* prefix) {
 	for (i = 0; i < CHAR_SIZE; i++) {
 		if (root->ch[i]) {
 			prefix = string_append(prefix, ' ' + i);
-			suggestion_by_prefix(root->ch[i], prefix);
+			suggestion_by_prefix(root->ch[i], prefix, len+1);
 			prefix = string_pop_back(prefix);
 		}
 	}
 }
 
 
-int print_auto_suggestion(trie* root, char* query) {
+int auto_complete_suggestion(trie* root, char* query, int len) {
 	/* used to autocomplete */
 	trie* crawl = root;
 
 	int level;
-	int len = strlen(query);
+	//int len = strlen(query);
 	int index;
 	int is_word, is_last;
 	char* prefix=NULL;
@@ -489,13 +495,14 @@ int print_auto_suggestion(trie* root, char* query) {
 
 	/* 이 노드가 끝이고, 그 뒤에 이어지는 노드가 없을 때 인쇄 */
 	if (is_word && is_last) {
-		printf("%s\n", query);
+        insert_list(query, len);
+		//printf("%s", query);
 		return -1;
 	}
 
 	if (is_last == 0) {
 		prefix = string_copy(query);
-		suggestion_by_prefix(crawl, prefix);
+		suggestion_by_prefix(crawl, prefix, len);
 		return 1;
 	}
 
@@ -509,13 +516,14 @@ int print_auto_suggestion(trie* root, char* query) {
 int is_separator(int c) {
 	if (isspace(c)) { return 1; }
 	if (c == '\0') { return 2; }
-	if (strchr(",.()+-/*=~%<>[];", c) != NULL) { return 2; }
+	if (strchr(",.()+-/=~%<>[];", c) != NULL) { return 2; }
+	if (strchr("*&", c) != NULL) { return 3; } /*modf*/
 	return 0;
 }
 
 /* 행의 하이라이팅 버퍼 업데이트 */
 void editor_update_syntax(editor_row* row) {
-	int i, j, idx, prev_sep, name_keyword; //modf
+	int i, j, idx, prev_sep, name_keyword; 
 	int in_string;
 	int in_comment;
 	char c;
@@ -655,13 +663,14 @@ void editor_update_syntax(editor_row* row) {
 					int a;
 					// 함수명/변수명 길이 찾기
 					for (a = 0; i + a < row->rsize && !is_separator(row->render[i + a]); a++);
-					//modf: < ! >is_separator...
 					strncpy(word, &row->render[i], a);
 					word[a] = '\0';
 					wordcnt++;
 					fprintf(fp_save, "[%s]\n", word);
 					// insert it to trie
-					//insert_list(&row->render[i], a); // 함수명/변수명 리스트에 삽입
+                    trie_insert_string(Editor.auto_complete, word);
+                    //파싱된 함수명을 트라이에 삽입
+					insert_list(&row->render[i], a); // 함수명/변수명 리스트에 삽입
 					name_keyword = 0; prev_sep = 0;
 					i += a;
 					continue;
@@ -1636,6 +1645,7 @@ void editor_move_cursor(int key) {
 void editor_process_key_press() {
 	static int quit_times = QUIT_TIMES;
 	int c = editor_read_key();
+    char* prefix_word=malloc(sizeof(char)*WORDMAX);
 
 	switch (c) {
 
@@ -1658,18 +1668,37 @@ void editor_process_key_press() {
 
 
 		/* WordRecommend */
-	case CTRL_KEY('p'):
+	case CTRL_KEY('p'): // modf
 	{
 		WINDOW* win = newwin(SHOWCNT + 3, WORDMAX + 2, Editor.cy + 1, Editor.cx);// +3 -> +2
-
+        keypad(win, TRUE);
+        //to get special character
 		// chk: border line
 		// chk: subwin pos - at cursor OR at word's first letter
 		box(win, 0, 0);
+		int start; // 현재 row에서 prefix의 첫 글자 인덱스를 저장할 변수
+		for (start = Editor.cx; start>=0 || !is_separator(Editor.row[Editor.cy].chars[start]); start--);
+        //for 문의 부등호 방향 수정함 
+		start++;
+		// trie에서 검색할 prefix: 현재 row에서 인덱스가 [start, Editor.cx]인 substring
+        if(Editor.cx-start+2>=WORDMAX){break;}
+        else{
+            prefix_word=strncpy(prefix_word, &Editor.row[Editor.cy].chars[start], Editor.cx-start);
+            //prefix의 길이는 Editor.cx-start 이다
+        }
+        //fprintf(fp_save, "%s\n", prefix_word);
+        //auto_complete_suggestion(Editor.auto_complete, prefix_word, Editor.cx-start);
+        //char tmp=Editor.cx-start+'0';
+        //insert_list(&tmp, 1);
+        insert_list(prefix_word, Editor.cx-start);
 		char* word = word_recommend(win);
 		delwin(win);
-		int word_len = strlen(word);
-		if (word) { // insert word
+		int word_len;
+		if (word!=NULL) { // insert word if word exists
+            word_len=strlen(word);
 			for (int i = 0; i < word_len; i++) {
+				if (word[i] == Editor.row[Editor.cy].chars[start + i]) continue; 
+				// word 중 스크린에 없는 부분만 입력한다.
 				editor_insert_char(word[i]);
 			}
 		}
@@ -1679,10 +1708,9 @@ void editor_process_key_press() {
 	/* FindBracket */
 	case CTRL_KEY('B'):
 	{
-
-		if ((Editor.row[Editor.cy].chars[Editor.cx] == '{' && Editor.row[Editor.cy].hl[Editor.cx] == HL_NORMAL) || (Editor.row[Editor.cy].chars[Editor.cx] == '}' && Editor.row[Editor.cy].hl[Editor.cx] == HL_NORMAL)) {
-			find_bracket();
-			// modf: highlight bracket(s)
+		// modf: highlight bracket(s)
+		find_bracket();
+		if (bracket_pair[0][0] != -1) {
 			if (bracket_pair[1][0] == -1) { // not pair
 				Editor.row[bracket_pair[0][0]].hl[bracket_pair[0][1]] = HL_NOTPAIR;
 			}
@@ -1780,6 +1808,7 @@ void init_editor() {
 	Editor.status_msg[0] = '\0';
 	Editor.status_msg_time = 0;
 	Editor.syntax = NULL;
+    Editor.auto_complete=get_new_trie_node();
 
 	get_window_size(&Editor.screenrows, &Editor.screencols);
 	if (Editor.screenrows == -1 && Editor.screencols == -1) {
@@ -1827,7 +1856,7 @@ bracket_pair[1] = {-1,-1} 이면 현재 괄호에 쌍 없음.
 */
 void find_bracket() {
 	int r = Editor.cy;
-	int c = editor_row_cx_to_rx(&Editor.row[r], Editor.cx); // modf: to render
+	int c = editor_row_cx_to_rx(&Editor.row[r], Editor.cx); 
 	char_node* stack = NULL;
 	short int found = 0;
 	if (Editor.row[r].render[c] == '{' && Editor.row[r].hl[c] == HL_NORMAL) { // 커서 위치에 string/comment가 아닌 '{'가 있을 때
@@ -2006,7 +2035,7 @@ char* word_recommend(WINDOW* win) { // return selected word from list
 		case KEY_ESC:
 			return NULL;
 			break;
-
+            
 		case KEY_RIGHT:
 		case KEY_DOWN: // arrow two chars
 		case 's':
@@ -2120,14 +2149,14 @@ int main(int argc, char* argv[]) {
 
 	editor_set_status_message("HELP : Ctrl-S = save | Ctrl-Q = quit | Ctrl-F = find");
 
-	for (int i = 0; i < 2; i++) { //modf
+	for (int i = 0; i < 2; i++) { 
 		bracket_pair[0][i] = -1;
 		bracket_pair[1][i] = -1;
 	}
 
 	while (1) {
 		editor_refresh_screen();
-		if (bracket_pair[0][0] != -1) { // modf
+		if (bracket_pair[0][0] != -1) { 
 			Editor.row[bracket_pair[0][0]].hl[bracket_pair[0][1]] = HL_NORMAL;
 			if (bracket_pair[1][0] != -1) {
 				Editor.row[bracket_pair[1][0]].hl[bracket_pair[1][1]] = HL_NORMAL;
