@@ -1693,7 +1693,7 @@ void editor_process_key_press() {
         //insert_list(prefix_word, Editor.cx-start);
 		char* word = word_recommend(win);
 		delwin(win);
-		erase_list();
+		//erase_list();
 		int word_len;
 		if (word!=NULL) { // insert word if word exists
             word_len=strlen(word);
@@ -1703,6 +1703,7 @@ void editor_process_key_press() {
 				editor_insert_char(word[i]);
 			}
 		}
+		erase_list();
 		break;
 	}
 
@@ -1974,12 +1975,15 @@ void insert_list(char* start, int len) {
 
 void erase_list() {
 	/* erast the whole list. ?꾩뿭蹂??list媛 議댁옱 */
+	int i;
 	word_node* del;
-	while (list) {
-		del = list;
-		list = list->next;
+	for(i=0;i<list_cnt;i++){
+		del=list;
+		list=list->next;
+		free(del->word);
 		free(del);
 	}
+	list=NULL;
 	list_cnt=0;
 }
 
@@ -2134,13 +2138,17 @@ int main(int argc, char* argv[]) {
 	}
 	wclear(stdscr);
 	start_color();
-	init_pair(HL_NUMBER, COLOR_GREEN, COLOR_BLACK); //珥덈줉??湲?? ?レ옄 ?섏씠?쇱씠??/
-	init_pair(HL_MATCH, COLOR_WHITE, COLOR_MAGENTA); // 寃??寃곌낵 ?섏씠?쇱씠??
+	init_color(COLOR_BLUE, 500,500, 1000);
+	init_color(COLOR_MAGENTA, 1000,400,1000);
+	init_color(COLOR_RED, 1000,0,200);
+	//rgb 색 조정
+	init_pair(HL_NUMBER, COLOR_GREEN, COLOR_BLACK); //number highlighting
+	init_pair(HL_MATCH, COLOR_WHITE, COLOR_MAGENTA); //search result highlighting
 	init_pair(HL_STRING, COLOR_YELLOW, COLOR_BLACK);
-	init_pair(HL_COMMENT, COLOR_PINK, COLOR_BLACK);
+	init_pair(HL_COMMENT, COLOR_BLUE, COLOR_BLACK);
 	init_pair(HL_KEYWORD1, COLOR_CYAN, COLOR_BLACK);
-	init_pair(HL_KEYWORD2, COLOR_SKYBLUE, COLOR_BLACK);
-	init_pair(HL_MLCOMMENT, COLOR_CHERRY, COLOR_BLACK);
+	init_pair(HL_KEYWORD2, COLOR_MAGENTA, COLOR_BLACK);
+	init_pair(HL_MLCOMMENT, COLOR_RED, COLOR_BLACK);
 	init_pair(HL_PAIR, COLOR_WHITE, COLOR_GREEN);
 	init_pair(HL_NOTPAIR, COLOR_WHITE, COLOR_RED);
 
