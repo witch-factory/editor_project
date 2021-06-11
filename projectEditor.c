@@ -148,7 +148,7 @@ char *C_highlight_keywords[] = {
 
 	/* types */
 	"int|", "long|", "double|", "float|", "char|", "unsigned|", "signed|",
-	"void|", "short", "auto|", "const|", "bool|" ,"#include|","FILE|", NULL
+	"void|", "short", "auto|", "const|", "bool|" ,"#include|","FILE|", "#define", NULL
 };
 
 editor_syntax HLDB[] = {
@@ -1670,7 +1670,7 @@ void editor_process_key_press() {
 		/* WordRecommend */
 	case CTRL_KEY('p'): // modf
 	{
-		WINDOW* win = newwin(SHOWCNT + 3, WORDMAX + 2, Editor.cy + 1, Editor.cx);// +3 -> +2
+		WINDOW* win = newwin(SHOWCNT + 3, WORDMAX + 2, Editor.cy - Editor.rowoff + 1, Editor.cx-Editor.coloff);// +3 -> +2
         keypad(win, TRUE);
         //to get special character
 		// chk: border line
@@ -1849,24 +1849,24 @@ void delete_char_list(char_node** clist) {
 }
 
 
-/*** FindBracket: 愿꾪샇 ??李얘린 ***/
+/*** FindBracket: 괄호 쌍 찾기 ***/
 /*
 bracket_pair[2][2]
-?섏씠?쇱씠???섍린 ?꾪빐 愿꾪샇???꾩튂 ?쇰떒 ??? ?꾩옱 ?ъ슜 ?덊븿.
-bracket_pair[0]???띿쓣 李얠쓣 愿꾪샇 ?꾩튂 ???
-bracket_pair[1] = {-1,-1} ?대㈃ ?꾩옱 愿꾪샇?????놁쓬.
+하이라이트 하기 위해 괄호쌍 위치 일단 저장. 현재 사용 안함.
+bracket_pair[0]에 쌍을 찾을 괄호 위치 저장
+bracket_pair[1] = {-1,-1} 이면 현재 괄호에 쌍 없음.
 */
 void find_bracket() {
 	int r = Editor.cy;
 	int c = editor_row_cx_to_rx(&Editor.row[r], Editor.cx); 
 	char_node* stack = NULL;
-	short int found = 0;
-	if (Editor.row[r].render[c] == '{' && Editor.row[r].hl[c] == HL_NORMAL) { // 而ㅼ꽌 ?꾩튂??string/comment媛 ?꾨땶 '{'媛 ?덉쓣 ??
+	//short int found = 0;
+	if (Editor.row[r].render[c] == '{' && Editor.row[r].hl[c] == HL_NORMAL) { // 커서 위치에 string/comment가 아닌 '{'가 있을 때
 		insert_char_list(&stack, '{');
 		bracket_pair[0][0] = r;
 		bracket_pair[0][1] = c;
 		c++;
-		/* ?뚯씪 ?앷퉴吏 ?꾩쟾 ?먯깋*/
+		/* 파일 끝까지 완전 탐색*/
 		for (; c < Editor.row[r].rsize; c++) {
 			if (Editor.row[r].render[c] == '{' && Editor.row[r].hl[c] == HL_NORMAL) {
 				insert_char_list(&stack, '{');
@@ -1903,12 +1903,12 @@ void find_bracket() {
 		}
 
 	}
-	else if (Editor.row[r].render[c] == '}'&& Editor.row[r].hl[c] == HL_NORMAL) { // 而ㅼ꽌 ?꾩튂??string/comment媛 ?꾨땶 '}'媛 ?덉쓣 ??
+	else if (Editor.row[r].render[c] == '}'&& Editor.row[r].hl[c] == HL_NORMAL) { // 커서 위치에 string/comment가 아닌 '}'가 있을 때
 		insert_char_list(&stack, '}');
 		bracket_pair[0][0] = r;
 		bracket_pair[0][1] = c;
 		c--;
-		/* ?뚯씪 ?앷퉴吏 ?꾩쟾 ?먯깋*/
+		/* 파일 끝까지 완전탐색 */
 		for (; c >= 0; c--) {
 			if (Editor.row[r].render[c] == '{'&& Editor.row[r].hl[c] == HL_NORMAL) {
 				delete_char_list(&stack);
