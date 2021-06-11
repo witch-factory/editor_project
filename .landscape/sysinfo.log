@@ -1,0 +1,11 @@
+2021-05-17 15:41:08,460 ERROR    Processes plugin raised an exception.
+Traceback (most recent call last):
+  File "/usr/lib/python3/dist-packages/landscape/sysinfo/sysinfo.py", line 99, in run
+    result = plugin.run()
+  File "/usr/lib/python3/dist-packages/landscape/sysinfo/processes.py", line 17, in run
+    info = ProcessInformation(proc_dir=self._proc_dir)
+  File "/usr/lib/python3/dist-packages/landscape/lib/process.py", line 29, in __init__
+    self._jiffies_per_sec = jiffies or detect_jiffies()
+  File "/usr/lib/python3/dist-packages/landscape/lib/jiffies.py", line 42, in detect_jiffies
+    jiffies1 = int(jiffie_uptime/seconds_uptime1+0.5)
+ZeroDivisionError: float division by zero

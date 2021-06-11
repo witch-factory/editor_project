@@ -1,0 +1,3 @@
+int c;
+int a;
+
