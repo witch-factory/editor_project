@@ -441,7 +441,7 @@ void free_trie(trie* node) {
 
 /*** autocomplete functions ***/
 
-void suggestion_by_prefix(trie* root, char* prefix, int len) {
+void suggestion_by_prefix(trie* root, char* prefix) {
 	//find the words starts with prefix string, with length len
 	int i;
 	//int len;
@@ -449,7 +449,7 @@ void suggestion_by_prefix(trie* root, char* prefix, int len) {
 
 	if (root->is_leaf) {
 		printf("%s\n", prefix);
-        insert_list(prefix, len);
+        insert_list(prefix, strlen(prefix));
         //trie_insert_string(Editor.auto_complete, prefix);
 	}
 
@@ -461,19 +461,19 @@ void suggestion_by_prefix(trie* root, char* prefix, int len) {
 	for (i = 0; i < CHAR_SIZE; i++) {
 		if (root->ch[i]) {
 			prefix = string_append(prefix, ' ' + i);
-			suggestion_by_prefix(root->ch[i], prefix, len+1);
+			suggestion_by_prefix(root->ch[i], prefix);
 			prefix = string_pop_back(prefix);
 		}
 	}
 }
 
 
-int auto_complete_suggestion(trie* root, char* query, int len) {
+int auto_complete_suggestion(trie* root, char* query) {
 	/* used to autocomplete */
 	trie* crawl = root;
 
 	int level;
-	//int len = strlen(query);
+	int len = strlen(query);
 	int index;
 	int is_word, is_last;
 	char* prefix=NULL;
@@ -495,14 +495,14 @@ int auto_complete_suggestion(trie* root, char* query, int len) {
 
 	/* 이 노드가 끝이고, 그 뒤에 이어지는 노드가 없을 때 인쇄 */
 	if (is_word && is_last) {
-        insert_list(query, len);
+        insert_list(query, strlen(query));
 		//printf("%s", query);
 		return -1;
 	}
 
 	if (is_last == 0) {
 		prefix = string_copy(query);
-		suggestion_by_prefix(crawl, prefix, len);
+		suggestion_by_prefix(crawl, prefix);
 		return 1;
 	}
 
@@ -670,7 +670,7 @@ void editor_update_syntax(editor_row* row) {
 					// insert it to trie
                     trie_insert_string(Editor.auto_complete, word);
                     //파싱된 함수명을 트라이에 삽입
-					insert_list(&row->render[i], a); // 함수명/변수명 리스트에 삽입
+					//insert_list(&row->render[i], a); // 함수명/변수명 리스트에 삽입
 					name_keyword = 0; prev_sep = 0;
 					i += a;
 					continue;
@@ -1685,9 +1685,10 @@ void editor_process_key_press() {
         else{
             prefix_word=strncpy(prefix_word, &Editor.row[Editor.cy].chars[start], Editor.cx-start);
             //prefix의 길이는 Editor.cx-start 이다
+			prefix_word[Editor.cx-start]='\0';
         }
         //fprintf(fp_save, "%s\n", prefix_word);
-        //auto_complete_suggestion(Editor.auto_complete, prefix_word, Editor.cx-start);
+        auto_complete_suggestion(Editor.auto_complete, prefix_word);
         //char tmp=Editor.cx-start+'0';
         //insert_list(&tmp, 1);
         insert_list(prefix_word, Editor.cx-start);
@@ -2010,7 +2011,7 @@ char* word_recommend(WINDOW* win) { // return selected word from list
 	int key, top = 0;
 	word_node* top_node = list;
 	int x = 1, y = 1, i;
-	//char* word = (char*)malloc(sizeof(char)*WORDMAX);
+	char* word = (char*)malloc(sizeof(char)*WORDMAX);
 
 	word_node* cur = list;
 	for (i = 1; i <= SHOWCNT; i++) {
