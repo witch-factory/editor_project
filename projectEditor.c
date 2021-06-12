@@ -1,5 +1,13 @@
 /* includes */
-// dbg:  복원 못한 주석
+// dbg:  복원 못한 주석/* 수정:
+/* 수정: ( 'modf' 로 표시 ) 
+	자동완성 - 에디터에서 변수 / 함수명 선언할 때 마지막 단계만 trie에 들어가도록 변경
+		1) 뒤에 ';([' 오면 넣는다
+		2) 뒤에 ',' 오면 넣고, 바로 뒤에 오는 변수/함수명을 넣을 준비를 한다.
+		3) 뒤에 공백,'\t' 오면 넣는다
+		4) 뒤에 '\0' 이 오면 줄 바꿈할 때까지 보류하고 넣는다.
+	debug.txt 관련 코드 제거
+*/
 
 #define _DEFAULT_SOURCE
 #define _BSD_SOURCE
@@ -39,14 +47,14 @@ enum editor_highlight {
 	HL_NOTPAIR
 };
 
-enum separator{
-	NORMAL_CHAR=0,
-	SEP_SPACE=1,
-	SEP_NULL=2,
-	SEP_OTHER=3,
-	SEP_NAMEEND=4
-}
-
+enum separator {
+	NORMAL_CHAR = 0,
+	SEP_SPACE,
+	SEP_NULL,
+	SEP_OTHER,
+	SEP_NAMEEND,
+	SEP_COM
+};
 
 #define HL_HIGHLIGHT_NUMBERS (1<<0)
 #define HL_HIGHLIGHT_STRINGS (1<<1)
@@ -111,6 +119,7 @@ typedef struct {
 typedef struct {
 	int cx;
 	int cy; /* 현재 커서의 위치 */
+	int py; // row idx before present key was pressed. Used to read in name_keyword
 	int rx; /* render field index. 만약 탭이 있으면 탭이 차지하는 공간 때문에 rx가 cx보다 더 커짐*/
 	int rowoff; // 스크린 밖 위에 있는 행의 개수
 	int coloff; // 스크린 밖 왼쪽에 있는 열의 개수
@@ -505,11 +514,12 @@ int auto_complete_suggestion(trie* root, char* query) {
 
 /*** syntax highlighting ***/
 
-int is_separator(int c) {
+int is_separator(int c) { // modf
 	if (c == '\0') { return SEP_NULL; }
-	if (strchr(".+=/~%%<>*&", c)!=NULL){return SEP_OTHER;}
-	if (strchr(",()=[];", c)!=NULL || c==' '){return SEP_NAMEEND;}
-	if (isspace(c) && c!=' ') { return SEP_SPACE; }
+	if (c == ',') { return SEP_COM; }
+	if (strchr("?:'\".+-/%<>*!|&)]{}~", c) != NULL) { return SEP_OTHER; }
+	if (strchr("(=[;", c) != NULL) { return SEP_NAMEEND; }
+	if (isspace(c) || c == '\t') { return SEP_SPACE; /*this is SEP_NAMEEND too */ }
 	return NORMAL_CHAR;
 }
 
@@ -646,32 +656,50 @@ void editor_update_syntax(editor_row* row) {
 
 		if (prev_sep) { /* keywords highlight */
 			if (name_keyword) {
-				switch (is_separator(c)) { 
-				case 2:
-					// 공백 아닌 separator
-					name_keyword = 0;
-					break;  // keyword2가 변수/함수 선언이 아닌 다른 용도로 사용될 때 (eg) sizeof(char)
-				case 0:
+				switch (is_separator(c)) {
+				case SEP_SPACE:
+					break;
+				case NORMAL_CHAR:
 				{
 					// separator가 아닌 문자
 					int a;
 					// 함수명/변수명 길이 찾기
-					for (a = 3; i + a < row->rsize && !is_separator(row->render[i + a]); a++);
-					if(is_separator(row->render[i+a])==SEP_NAMEEND){
-						if (a > WORDMAX) {
-							WORDMAX = a;
-							word_input = (char*)realloc(word_input, sizeof(char)*(WORDMAX + 1));
-						}
-						strncpy(word_input, &row->render[i], a);
-						word_input[a] = '\0';
-						// insert it to trie
-						trie_insert_string(Editor.auto_complete, word_input);
-						name_keyword = 0; prev_sep = 0;
-						i += a;
+					for (a = 0; !is_separator(row->render[i + a]); a++); // modf: last char of line is always SEP_NULL
+					if (a > WORDMAX) {
+						WORDMAX = a;
+						word_input = (char*)realloc(word_input, sizeof(char)*(WORDMAX + 1));
 					}
+					strncpy(word_input, &row->render[i], a);
+					word_input[a] = '\0';
+					name_keyword = 0;
+					/* modf: insert it to trie ONLY IF there is SEP_NAMEEND or SEP_SPACE at the end
+						if there isn't, wait until row change to get the name word at final stage.
+						Word at final stage is inserted to trie in editor_process_key_press()
+					*/ 
+					switch (is_separator(row->render[i + a])) {
+					case SEP_NAMEEND:
+					case SEP_SPACE:
+						trie_insert_string(Editor.auto_complete, word_input);
+						word_input[0] = '\0';
+						break;
+					case SEP_COM: // for multiple name_keywords in same line separated by ','
+						trie_insert_string(Editor.auto_complete, word_input);
+						word_input[0] = '\0';
+						name_keyword = 1;
+						break;
+					case SEP_NULL: break;
+					default: 
+						word_input[0] = '\0'; 
+						break;
+					}
+					prev_sep = 0;
+					i += a;
 					continue;
 				}
-				default: break;
+				default: // 공백 아닌 separator.
+					//  keyword2가 변수/함수 선언이 아닌 다른 용도로 사용될 때 (eg) sizeof(char)
+					name_keyword = 0;
+					break;
 				}
 			}
 			else {
@@ -978,12 +1006,9 @@ void editor_open(char *filename) {
 	FILE* fp;
 	free(Editor.filename);
 	Editor.filename = strdup(filename);
-	FILE* debug_file;
 
 	fp = fopen(filename, "r");
 	if (!fp) { die("fopen"); }
-
-	debug_file = fopen("debug.txt", "w");
 
 	char *line = NULL;
 	size_t linecap = 0;
@@ -994,12 +1019,10 @@ void editor_open(char *filename) {
 		while (linelen > 0 && (line[linelen - 1] == '\n' || line[linelen - 1] == '\r')) {
 			linelen--;
 		}
-		fprintf(debug_file, "%d\n", count);
 		count++;
 		editor_insert_row(Editor.numrows, line, linelen);
 	}
 
-	fprintf(debug_file, "number of rows : %d\n", Editor.numrows);
 	editor_select_syntax_highlight();
 	/* 파일 열고 나서 문자열 복사 후 신택스 하이라이팅 */
 	free(line);
@@ -1007,7 +1030,6 @@ void editor_open(char *filename) {
 
 	Editor.dirty = 0;
 
-	fclose(debug_file);
 }
 
 
@@ -1224,6 +1246,7 @@ void editor_find() {
 	char *query = editor_prompt("Search: %s (Use ESC/Arrows/Enter)", editor_find_callback);
 
 	if (query) {
+		Editor.py = saved_cy;
 		free(query);
 	}
 	else {
@@ -1588,7 +1611,6 @@ void editor_process_key_press() {
 	static int quit_times = QUIT_TIMES;
 	int c = editor_read_key();
     char* prefix_word=malloc(sizeof(char)*WORDMAX);
-
 	switch (c) {
 
 	case CTRL_KEY('q'):
@@ -1611,15 +1633,15 @@ void editor_process_key_press() {
 	case CTRL_KEY('p'): 
 	{
 		if (Editor.cx == 0) break; 
-		Editor.rx=editor_row_rx_to_cx(&Editor.row[Editor.cy], Editor.cx); 
+		Editor.rx=editor_row_cx_to_rx(&Editor.row[Editor.cy], Editor.cx); 
 		WINDOW* win;
 		if (Editor.cy + SHOWCNT + 2 > Editor.screenrows + Editor.rowoff) {
 			if (Editor.rx + WORDMAX + 2 > Editor.screencols + Editor.coloff) win = newwin(SHOWCNT + 2, WORDMAX + 2, Editor.cy - (SHOWCNT + 2) -  Editor.rowoff, Editor.rx - (WORDMAX + 2)-Editor.coloff);
-			else win = newwin(SHOWCNT + 2, WORDMAX + 2, Editor.cy - (SHOWCNT + 2) - Editor.rowoff, Editor.rx - Editor.coloff);
+			else win = newwin(SHOWCNT + 2, WORDMAX + 2, Editor.cy - (SHOWCNT + 2) - Editor.rowoff, Editor.rx);
 		}
 		else {
-			if (Editor.rx + WORDMAX + 2 > Editor.screencols + Editor.coloff) win = newwin(SHOWCNT + 2, WORDMAX + 2, Editor.cy - Editor.rowoff + 1, Editor.rx - (WORDMAX + 2)-Editor.coloff);
-			else win = newwin(SHOWCNT + 2, WORDMAX + 2, Editor.cy - Editor.rowoff + 1, Editor.rx - Editor.coloff);
+			if (Editor.rx + WORDMAX + 2 > Editor.screencols + Editor.coloff) win = newwin(SHOWCNT + 2, WORDMAX + 2, Editor.cy + 1, Editor.rx - (WORDMAX + 2)-Editor.coloff);
+			else win = newwin(SHOWCNT + 2, WORDMAX + 2, Editor.cy + 1, Editor.rx);
 		}
         keypad(win, TRUE);
         //to get special character
@@ -1667,14 +1689,17 @@ void editor_process_key_press() {
 
 
 	case CTRL_KEY('f'):
+		Editor.py = Editor.cy;
 		editor_find();
 		break;
 
 	case KEY_HOME:
+		Editor.py = Editor.cy;
 		Editor.cx = 0;
 		break;
 
 	case KEY_END:
+		Editor.py = Editor.cy;
 		if (Editor.cy < Editor.numrows) {
 			Editor.cx = Editor.row[Editor.cy].size;
 		}
@@ -1683,6 +1708,7 @@ void editor_process_key_press() {
 	case KEY_BACKSPACE:
 	case CTRL_KEY('h'):
 	case KEY_DC:
+		Editor.py = Editor.cy;
 		if (c == KEY_DC) {
 			editor_move_cursor(KEY_RIGHT);
 		}
@@ -1693,6 +1719,7 @@ void editor_process_key_press() {
 	case KEY_DOWN:
 	case KEY_LEFT:
 	case KEY_RIGHT:
+		Editor.py = Editor.cy;
 		editor_move_cursor(c);
 		break;
 
@@ -1700,12 +1727,15 @@ void editor_process_key_press() {
 	case KEY_NPAGE:
 		/* 페이지 단위로 이동하기. PAGEUP, PAGEDOWN */
 	{
+		Editor.py = Editor.cy;
 		if (c == KEY_PPAGE) {
 			Editor.cy = Editor.rowoff;
 		}
 		else if (c == KEY_NPAGE) {
 			Editor.cy = Editor.rowoff + Editor.screenrows - 1;
-			if (Editor.cy > Editor.numrows) { Editor.cy = Editor.numrows; }
+			if (Editor.cy > Editor.numrows) { 
+				Editor.cy = Editor.numrows; 
+			}
 		}
 
 		int times = Editor.numrows;
@@ -1722,13 +1752,21 @@ void editor_process_key_press() {
 		break;
 
 	case KEY_ENTER:
+		Editor.py = Editor.cy;
 		editor_insert_newline();
 		break;
 
 	default:
+		Editor.py = Editor.cy;
 		editor_insert_char(c);
 		break;
 
+	}
+
+	/* modf: name_keyword 뒤 문자가 SEP_NULL일 때 단어 전체를 입력받을 때까지 보류한 것을 지금 트라이에 넣음 */
+	if (word_input[0] != '\0' && Editor.cy != Editor.py) {
+		trie_insert_string(Editor.auto_complete, word_input);
+		word_input[0] = '\0';
 	}
 
 	quit_times = QUIT_TIMES;
@@ -1740,6 +1778,7 @@ void editor_process_key_press() {
 void init_editor() {
 	Editor.cx = 0;
 	Editor.cy = 0;
+	Editor.py = 0;
 	Editor.rx = 0;
 	Editor.rowoff = 0;
 	Editor.coloff = 0;
@@ -2037,7 +2076,6 @@ char* word_recommend(WINDOW* win) { // return selected word from list
 			wmove(win, y, x);
 			break;
 		}
-		//wborder(win, '|', '|', '-', '-', '+', '+', '+', '+'); 
 	}
 }
 
