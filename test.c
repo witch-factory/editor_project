@@ -1,82 +1,34 @@
-#include <ncurses.h>                                                                    
-                                                                                        
-                                                                                        
-WINDOW *create_newwin(int height, int width, int starty, int startx);                   
-void destroy_win(WINDOW *local_win);                                                    
-                                                                                        
-int main(int argc, char *argv[])                                                        
-{       WINDOW *my_win;                                                                 
-        int startx, starty, width, height;                                              
-        int ch;                                                                         
-                                                                                        
-        initscr();                      /* Start curses mode            */              
-        cbreak();                       /* Line buffering disabled, Pass on             
-                                         * everty thing to me           */              
-        keypad(stdscr, TRUE);           /* I need that nifty F1         */              
-                                                                                        
-        height = 3;                                                                     
-        width = 10;                                                                     
-        starty = (LINES - height) / 2;  /* Calculating for a center placement */        
-        startx = (COLS - width) / 2;    /* of the window                */              
-        printw("Press F1 to exit");                                                     
-        refresh();                                                                      
-        my_win = create_newwin(height, width, starty, startx);                          
-                                                                                        
-        while((ch = getch()) != KEY_F(1))                                               
-        {       switch(ch)                                                              
-                {       case KEY_LEFT:                                                  
-                                destroy_win(my_win);                                    
-                                my_win = create_newwin(height, width, starty,--startx); 
-                                break;                                                  
-                        case KEY_RIGHT:                                                 
-                                destroy_win(my_win);                                    
-                                my_win = create_newwin(height, width, starty,++startx); 
-                                break;                                                  
-                        case KEY_UP:                                                    
-                                destroy_win(my_win);                                    
-                                my_win = create_newwin(height, width, --starty,startx); 
-                                break;                                                  
-                        case KEY_DOWN:                                                  
-                                destroy_win(my_win);                                    
-                                my_win = create_newwin(height, width, ++starty,startx); 
-                                break;                                                  
-                }                                                                       
-        }                                                                               
-                                                                                        
-        endwin();                       /* End curses mode                */            
-        return 0;                                                                       
-}                                                                                       
-                                                                                        
-WINDOW *create_newwin(int height, int width, int starty, int startx)                    
-{       WINDOW *local_win;                                                              
-                                                                                        
-        local_win = newwin(height, width, starty, startx);                              
-        box(local_win, 0 , 0);          /* 0, 0 gives default characters                
-                                         * for the vertical and horizontal              
-                                         * lines                        */              
-        wrefresh(local_win);            /* Show that box                */              
-                                                                                        
-        return local_win;                                                               
-}                                                                                       
-                                                                                        
-void destroy_win(WINDOW *local_win)                                                     
-{                                                                                       
-        /* box(local_win, ' ', ' '); : This won't produce the desired                   
-         * result of erasing the window. It will leave it's four corners                
-         * and so an ugly remnant of window.                                            
-         */                                                                             
-        wborder(local_win, ' ', ' ', ' ',' ',' ',' ',' ',' ');                          
-        /* The parameters taken are                                                     
-         * 1. win: the window on which to operate                                       
-         * 2. ls: character to be used for the left side of the window                  
-         * 3. rs: character to be used for the right side of the window                 
-         * 4. ts: character to be used for the top side of the window                   
-         * 5. bs: character to be used for the bottom side of the window                
-         * 6. tl: character to be used for the top left corner of the window            
-         * 7. tr: character to be used for the top right corner of the window           
-         * 8. bl: character to be used for the bottom left corner of the window         
-         * 9. br: character to be used for the bottom right corner of the window        
-         */                                                                             
-        wrefresh(local_win);                                                            
-        delwin(local_win);                                                              
-}                                                 
+#include <stdio.h>
+#include <ctype.h>
+
+int main(){
+        printf("%d", isspace(' '));
+}
+
+enum separator{
+	NORMAL_CHAR=0,
+	SEP_SPACE=1,
+	SEP_NULL=2,
+	SEP_OTHER=3,
+	SEP_NAMEEND=4
+}
+
+WINDOW* win;
+		if((Editor.cy-Editor.rowoff)+SHOWCNT+2>Editor.screenrows){
+			/* 창이 스크린보다 내려가야 할 때 */
+			if(Editor.rx+WORDMAX+2>Editor.coloff+Editor.screencols){
+				win=newwin(SHOWCNT+2, WORDMAX+2, Editor.cy-Editor.rowoff-(SHOWCNT+2), Editor.rx-Editor.coloff-(WORDMAX+2));
+			}
+			else{
+				win=newwin(SHOWCNT+2, WORDMAX+2, Editor.cy-Editor.rowoff-(SHOWCNT+2), Editor.rx);
+			}
+		}
+		else{
+			/* 창이 순방향으로 출력될 수 있다 */
+			if(Editor.rx+WORDMAX+2>Editor.coloff+Editor.screencols){
+				win=newwin(SHOWCNT+2, WORDMAX+2, Editor.cy-Editor.rowoff+1, Editor.rx-Editor.coloff-(WORDMAX+2));
+			}
+			else{
+				win=newwin(SHOWCNT+2, WORDMAX+2, Editor.cy-Editor.rowoff+1, Editor.rx-Editor.coloff);
+			}
+		}
