@@ -39,6 +39,7 @@ int main(void) {
 
 	int comp, t = -1;
 	trie* root = get_new_trie_node();
+    char temp[40]="hel";
 
 	trie_insert_string(root, "hello");
 	trie_insert_string(root, "dog");
@@ -329,3 +330,4 @@ long long count_key(trie* head, int isroot) {
 	return res;
 
 }
+
