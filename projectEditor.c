@@ -127,7 +127,7 @@ typedef struct {
 	int screencols;
 	int numrows;
 	char *filename;
-	char status_msg[80];
+	char status_msg[105];
 	time_t status_msg_time;
 	/* 상태 메시지와 그 타임스탬프 */
 	editor_syntax *syntax;
@@ -893,7 +893,7 @@ void editor_delete_row(int at) {
 void editor_row_insert_char(editor_row *row, int at, int c) {
 	if (at<0 || at>row->size) { at = row->size; }
 	if ((row->size + 2) >= row->msize) {
-		/* 筌롫뗀?덄뵳?? ??筌△뫀??2獄쏄퀡以?realloc. 筌롫뗀?덄뵳??온????μ몛???袁る퉸 ??륁젟??*/ //dbg
+		/* 만약에 메모리가 부족할 경우 2배로 늘려서 재할당해준다 */
 		row->chars = realloc(row->chars, (row->msize) * 2);
 		row->msize *= 2;
 	}
@@ -1652,7 +1652,7 @@ void editor_process_key_press() {
         if(Editor.cx-start+2>=WORDMAX){break;}
         else{
             prefix_word=strncpy(prefix_word, &Editor.row[Editor.cy].chars[start], Editor.cx-start);
-            //prefix??湲몄씠??Editor.cx-start ?대떎 // dbg
+            //prefix길이는 Editor.cx-start
 			prefix_word[Editor.cx-start]='\0';
         }
         auto_complete_suggestion(Editor.auto_complete, prefix_word);
@@ -1829,7 +1829,7 @@ void delete_char_list(char_node** clist) {
 }
 
 
-/*** FindBracket: 愿꾪샇 ??李얘린 ***/
+/*** FindBracket: 괄호쌍 검사 기능 ***/
 /*
 bracket_pair[2][2]
 하이라이트 하기 위해 괄호쌍 위치 일단 저장. 현재 사용 안함.
@@ -2123,7 +2123,7 @@ int main(int argc, char* argv[]) {
 	init_pair(HL_PAIR, COLOR_WHITE, COLOR_GREEN);
 	init_pair(HL_NOTPAIR, COLOR_WHITE, COLOR_RED);
 
-	editor_set_status_message("HELP : Ctrl-S = save | Ctrl-Q = quit | Ctrl-F = find");
+	editor_set_status_message("HELP : Ctrl-S = save | Ctrl-Q = quit | Ctrl-F = find | Ctrl-B = bracket check | Ctrl-P = autocomplete");
 
 	for (int i = 0; i < 2; i++) { 
 		bracket_pair[0][i] = -1;
