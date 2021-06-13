@@ -1637,11 +1637,11 @@ void editor_process_key_press() {
 		WINDOW* win;
 		if (Editor.cy + SHOWCNT + 2 > Editor.screenrows + Editor.rowoff) {
 			if (Editor.rx + WORDMAX + 2 > Editor.screencols + Editor.coloff) win = newwin(SHOWCNT + 2, WORDMAX + 2, Editor.cy - (SHOWCNT + 2) -  Editor.rowoff, Editor.rx - (WORDMAX + 2)-Editor.coloff);
-			else win = newwin(SHOWCNT + 2, WORDMAX + 2, Editor.cy - (SHOWCNT + 2) - Editor.rowoff, Editor.rx);
+			else win = newwin(SHOWCNT + 2, WORDMAX + 2, Editor.cy - (SHOWCNT + 2) - Editor.rowoff, Editor.rx-Editor.coloff);
 		}
 		else {
-			if (Editor.rx + WORDMAX + 2 > Editor.screencols + Editor.coloff) win = newwin(SHOWCNT + 2, WORDMAX + 2, Editor.cy + 1, Editor.rx - (WORDMAX + 2)-Editor.coloff);
-			else win = newwin(SHOWCNT + 2, WORDMAX + 2, Editor.cy + 1, Editor.rx);
+			if (Editor.rx + WORDMAX + 2 > Editor.screencols + Editor.coloff) win = newwin(SHOWCNT + 2, WORDMAX + 2, Editor.cy-Editor.rowoff + 1, Editor.rx - (WORDMAX + 2)-Editor.coloff);
+			else win = newwin(SHOWCNT + 2, WORDMAX + 2, Editor.cy-Editor.rowoff + 1, Editor.rx-Editor.coloff);
 		}
         keypad(win, TRUE);
         //to get special character
