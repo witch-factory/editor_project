@@ -517,7 +517,7 @@ int auto_complete_suggestion(trie* root, char* query) {
 int is_separator(int c) { // modf
 	if (c == '\0') { return SEP_NULL; }
 	if (c == ',') { return SEP_COM; }
-	if (strchr("?:'\".+-/%<>*!|&)]{}~", c) != NULL) { return SEP_OTHER; }
+	if (strchr("?:'\".+-/%<>*!|&)]{}~@#$^`\\", c) != NULL) { return SEP_OTHER; }
 	if (strchr("(=[;", c) != NULL) { return SEP_NAMEEND; }
 	if (isspace(c) || c == '\t') { return SEP_SPACE; /*this is SEP_NAMEEND too */ }
 	return NORMAL_CHAR;
