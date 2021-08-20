@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* 트라이의 자동완성 함수들 */
+
 #define CHAR_SIZE 96
 /* 32~127 ASCII code is used. */
 #define CHAR_TO_INDEX(c) ((int)c - (int)' ')
