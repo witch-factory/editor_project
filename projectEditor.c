@@ -1471,7 +1471,7 @@ void editor_draw_status_bar() {
 	len = snprintf(status, sizeof(status), "%.20s - %d lines %s", (Editor.filename ? Editor.filename : "[No Name]"),
 		Editor.numrows, (Editor.dirty ? "(modifying)" : ""));
 	/* 포맷 문자열 출력 */
-	rlen = snprintf(rstatus, sizeof(rstatus), "%s | %d line / %d line", Editor.syntax ? Editor.syntax->file_type : "no filtype", Editor.cy, Editor.numrows);
+	rlen = snprintf(rstatus, sizeof(rstatus), "%s | %d line / %d line", Editor.syntax ? Editor.syntax->file_type : "no filetype", Editor.cy, Editor.numrows);
 	if (len > Editor.screencols) { len = Editor.screencols; }
 
 	attron(A_REVERSE);
