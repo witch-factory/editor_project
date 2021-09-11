@@ -29,7 +29,7 @@ If you open a file with the text editor, you will immediately see the content of
 
 For example, if you open a text editor code file itself, you will see the content like this.
 
-![start](./start.png)
+![start](./start.PNG)
 
 As you can see, syntax highlighting for certain keywords works fine.
 
@@ -41,7 +41,7 @@ And you can save the change of the file by `Ctrl+S` key.
 
 If you started from the empty file, then you can make a new file and save the content you made.
 
-![myfille](mynewfile.png)
+![myfile](mynewfile.PNG)
 
 When you save the file, editor will notice you the bytes of the file you saved.
 
@@ -57,7 +57,7 @@ You can fine the keyword you want. By the KMP algorithm, you can find the long k
 
 Key for search is `Ctrl+F`
 
-![search](./search.png)
+![search](./search.PNG)
 
 Example) Searching the keyword `include`
 
@@ -69,9 +69,9 @@ If the pair is right, bracket pair will be highlighted in green.
 
 Otherwise, such bracket(In other words, bracket pair is not coupled) will be highlighted in red.
 
-![right](./right_pair.png)
+![right](./right_pair.PNG)
 
-![wrong](wrong_pair.png)
+![wrong](wrong_pair.PNG)
 
 ## Autocomplete
 
