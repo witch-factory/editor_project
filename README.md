@@ -83,5 +83,5 @@ You can autocomplete the variable/function name by pushing the `Ctrl+P` at the e
 
 SungHyun Kim(https://github.com/witch-factory)
 
-JiEun Kwon(https://github.com/lectura7942)
+Jiun Kwon(https://github.com/lectura7942)
 
